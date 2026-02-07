@@ -88,10 +88,51 @@ export function ProChat() {
                 <div className={`w-full lg:w-1/2 flex flex-col h-full relative lg:border-r border-slate-200/60 ${showPanel ? 'hidden lg:flex' : 'flex'}`}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl z-10">
-                        <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
-                            <span className="text-sm font-medium text-[#01334c]">Oneasy AI</span>
-                            <span className="text-xs bg-[#01334c]/10 text-[#01334c] px-1.5 py-0.5 rounded font-medium hidden sm:inline">Legal Advisor</span>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
+                                <span className="text-sm font-medium text-[#01334c]">Oneasy AI</span>
+                                <span className="text-xs bg-[#01334c]/10 text-[#01334c] px-1.5 py-0.5 rounded font-medium hidden sm:inline">Legal Advisor</span>
+                            </div>
+
+                            {/* Mobile Progress Circle */}
+                            {agentState && !agentState.isComplete && (
+                                <div className="lg:hidden flex items-center gap-2">
+                                    <div className="relative w-8 h-8">
+                                        <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
+                                            <circle
+                                                cx="16"
+                                                cy="16"
+                                                r="12"
+                                                stroke="#e2e8f0"
+                                                strokeWidth="3"
+                                                fill="none"
+                                            />
+                                            <circle
+                                                cx="16"
+                                                cy="16"
+                                                r="12"
+                                                stroke="#01334c"
+                                                strokeWidth="3"
+                                                fill="none"
+                                                strokeLinecap="round"
+                                                strokeDasharray={`${Math.min(Object.keys(agentState.answers).length / 6, 1) * 75.4} 75.4`}
+                                            />
+                                        </svg>
+                                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-[#01334c]">
+                                            {Object.keys(agentState.answers).length}/6
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Completed Badge */}
+                            {agentState?.isComplete && (
+                                <span className="lg:hidden text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                                    ✓ Done
+                                </span>
+                            )}
                         </div>
+
                         <div className="flex items-center gap-2">
                             {messages.length > 0 && (
                                 <button
@@ -156,7 +197,7 @@ export function ProChat() {
                     {/* Mobile: Close Button */}
                     <button
                         onClick={() => setShowPanel(false)}
-                        className="lg:hidden absolute top-4 right-4 z-10 p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+                        className="lg:hidden absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
                     >
                         <X className="w-5 h-5 text-slate-600" />
                     </button>
