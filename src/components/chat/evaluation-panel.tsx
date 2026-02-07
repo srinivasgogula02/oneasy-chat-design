@@ -170,7 +170,7 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
                                         <motion.div
                                             className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-[#01334c] to-cyan-600' : 'bg-slate-300'}`}
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${(item.value / 10) * 100}%` }}
+                                            animate={{ width: `${Math.min(item.value, 100)}%` }}
                                             transition={{ duration: 0.5, delay: i * 0.1 }}
                                         />
                                     </div>
