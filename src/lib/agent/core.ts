@@ -143,18 +143,63 @@ export async function observe(
     // Execute action based on type
     switch (action.type) {
         case 'generate_question':
+            const question = await generateSmartQuestion(state);
             return {
                 success: true,
-                data: await generateSmartQuestion(state),
+                data: question,
                 impact: 'Question generated for user',
             };
 
-        case 'update_scores':
+        case 'update_scores': {
+            // Import scoring functions
+            const { updateConfidenceScores, applyConstraints } = await import('./scoring');
+            const { extractFactorsFromAnswer } = await import('./question-generator');
+
+            // Get last user message
+            const lastUserMessage = state.conversationHistory
+                .filter(m => m.role === 'user')
+                .slice(-1)[0];
+
+            const lastAssistantMessage = state.conversationHistory
+                .filter(m => m.role === 'assistant')
+                .slice(-1)[0];
+
+            if (lastUserMessage) {
+                // Extract factors from user's answer
+                const newFactors = extractFactorsFromAnswer(
+                    lastUserMessage.content,
+                    lastAssistantMessage?.content || ''
+                );
+
+                // Update scores for each factor
+                let updatedHypotheses = state.currentHypotheses;
+                for (const factor of newFactors) {
+                    updatedHypotheses = updateConfidenceScores(
+                        { ...state, currentHypotheses: updatedHypotheses },
+                        factor
+                    );
+                }
+
+                // Apply hard constraints
+                updatedHypotheses = applyConstraints(updatedHypotheses, [
+                    ...state.gatheredFactors,
+                    ...newFactors
+                ]);
+
+                return {
+                    success: true,
+                    data: 'Scores updated based on new information',
+                    impact: 'Confidence scores recalculated',
+                    updatedFactors: newFactors,
+                };
+            }
+
             return {
                 success: true,
-                data: 'Scores updated',
-                impact: 'Confidence scores recalculated',
+                data: 'No new factors to process',
+                impact: 'No change',
             };
+        }
 
         case 'recommend':
             return {
@@ -204,23 +249,8 @@ export async function reflect(state: AgentState): Promise<Reflection> {
  * Generate smart question based on current state
  */
 async function generateSmartQuestion(state: AgentState): Promise<string> {
-    const topHypotheses = getTopHypotheses(state, 3);
-
-    const prompt = `Generate the next best question to ask the user to determine their ideal legal entity.
-
-TOP HYPOTHESES:
-${topHypotheses.map(h => `- ${h.entity}: ${(h.confidence * 100).toFixed(1)}%`).join('\n')}
-
-ALREADY ASKED (don't repeat):
-${state.conversationHistory.filter(m => m.role === 'assistant').map(m => m.content).join('\n')}
-
-Generate ONE concise, natural question that will help differentiate between the top entities.
-Keep it under 20 words. Be conversational.`;
-
-    return await callLLM([
-        { role: 'system', content: 'You are a conversational legal advisor.' },
-        { role: 'user', content: prompt },
-    ], { temperature: 0.7 });
+    const { selectBestQuestion } = await import('./question-generator');
+    return selectBestQuestion(state);
 }
 
 /**
