@@ -167,12 +167,25 @@ export async function processMessage(
     message: string,
     legacyState: LegacyState | null
 ) {
-    // For now, use legacy system on main branch
-    // This will be replaced once we merge agentic-architecture
+    // Convert legacy state to agentic state
+    let agenticState: NewAgentState | null = null;
 
-    // Import legacy processor
-    const { processMessage: legacyProcess } = await import("./actions.legacy");
-    return legacyProcess(message, legacyState);
+    if (legacyState?.conversationHistory) {
+        agenticState = initializeAgentState();
+        agenticState.conversationHistory = legacyState.conversationHistory.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+        }));
+    }
+
+    // Process with agentic orchestrator  
+    const result = await processAgenticMessage(message, agenticState);
+
+    // Convert back to legacy format for UI
+    return {
+        response: result.response,
+        newState: toLegacyState(result.newState),
+    };
 }
 
 /**
