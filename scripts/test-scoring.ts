@@ -52,6 +52,7 @@ const testScenarios = [
             { q: "Q5B", o: "JUST_ME" },
             { q: "Q5B_NRI_SOLO", o: "NO_RESIDENT" },
             { q: "Q6B", o: "NOT_WORRIED" },
+            { q: "Q6B_DIRECTORS", o: "NO_DIRECTORS" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "UNDER_20L" },
 
@@ -71,6 +72,7 @@ const testScenarios = [
             { q: "Q5B", o: "SMALL_TEAM" },
             { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "YES_DIRECTORS" },
             { q: "Q7B", o: "INVESTORS" },
             { q: "Q8B", o: "1CR_5CR" },
 
@@ -90,6 +92,7 @@ const testScenarios = [
             { q: "Q5B", o: "JUST_ME" },
             { q: "Q5B_NRI_SOLO", o: "YES_NRI" }, // KEY FACTOR
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "YES_DIRECTORS" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "20L_1CR" },
 
@@ -110,6 +113,7 @@ const testScenarios = [
             { q: "Q5B", o: "TWO_PEOPLE" },
             { q: "Q5B_NRI_MULTI", o: "YES_NRI" }, // KEY FACTOR
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "YES_DIRECTORS" },
             { q: "Q7B", o: "BANK_LOAN" },
             { q: "Q8B", o: "20L_1CR" },
 
@@ -130,6 +134,7 @@ const testScenarios = [
             { q: "Q5B", o: "TWO_PEOPLE" },
             { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "NO_DIRECTORS" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "20L_1CR" },
             // KEY FACTOR
@@ -173,6 +178,7 @@ const testScenarios = [
             { q: "Q5B", o: "SMALL_TEAM" },
             { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "YES_DIRECTORS" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "1CR_5CR" },
             { q: "Q10B", o: "INDIA_ONLY" },
@@ -192,6 +198,7 @@ const testScenarios = [
             { q: "Q5B", o: "JUST_ME" },
             { q: "Q5B_NRI_SOLO", o: "NO_RESIDENT" },
             { q: "Q6B", o: "NOT_WORRIED" },
+            { q: "Q6B_DIRECTORS", o: "NO_DIRECTORS" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "20L_1CR" },
             { q: "Q10B", o: "INDIA_ONLY" },
@@ -210,6 +217,7 @@ const testScenarios = [
             { q: "Q5B", o: "SMALL_TEAM" },
             { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
             { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q6B_DIRECTORS", o: "YES_DIRECTORS" },
             { q: "Q7B", o: "INVESTORS" },
             { q: "Q8B", o: "ABOVE_5CR" },
             { q: "Q10B", o: "INDIA_ONLY" },

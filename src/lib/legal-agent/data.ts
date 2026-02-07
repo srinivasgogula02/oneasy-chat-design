@@ -12,7 +12,7 @@ export const QUESTIONS: Record<string, Question> = {
                     { entity: "Private Limited Company", score: 10 },
                     { entity: "LLP", score: 10 },
                     { entity: "Sole Proprietorship", score: 10 },
-                    { entity: "OPC", score: 5 },
+                    { entity: "OPC", score: 10 },
                 ],
                 nextQuestionId: "Q2B"
             },
@@ -41,7 +41,7 @@ export const QUESTIONS: Record<string, Question> = {
             { id: "CONTENT_CREATOR", text: "Content Creator (YouTuber, Influencer)", impacts: [{ entity: "Sole Proprietorship", score: 35 }], nextQuestionId: "Q3B" },
             { id: "SOLO_SERVICE", text: "Professional / Service (Doctor, Lawyer, Tutor, Agency)", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 10 }, { entity: "LLP", score: 25 }], nextQuestionId: "Q3B" },
             { id: "TRADING", text: "Trading/Reselling Goods", impacts: [{ entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: 20 }], nextQuestionId: "Q3B" },
-            { id: "BUILDING_COMPANY", text: "Building a Company / Startup (Tech, Fintech, Manufacturing)", impacts: [{ entity: "Private Limited Company", score: 40 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q3B" },
+            { id: "BUILDING_COMPANY", text: "Building a Company / Startup (Tech, Fintech, Manufacturing)", impacts: [{ entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 20 }, { entity: "OPC", score: 30 }], nextQuestionId: "Q3B" },
         ]
     },
 
@@ -83,7 +83,7 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q5B_NRI_SOLO",
         text: "Are you a Non-Resident Indian (NRI) or foreign citizen?",
         options: [
-            { id: "YES_NRI", text: "Yes, I am an NRI / Foreign Citizen", impacts: [{ entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: 10 }, { entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Public Limited Company", score: 30 }], nextQuestionId: "Q6B" },
+            { id: "YES_NRI", text: "Yes, I am an NRI / Foreign Citizen", impacts: [{ entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: 30 }, { entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Public Limited Company", score: 30 }], nextQuestionId: "Q6B" },
             { id: "NO_RESIDENT", text: "No, I am an Indian resident", impacts: [], nextQuestionId: "Q6B" },
         ]
     },
@@ -93,7 +93,7 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q5B_NRI_MULTI",
         text: "Are you or any of your partners Non-Resident Indians (NRI) or foreign citizens?",
         options: [
-            { id: "YES_NRI", text: "Yes, one or more of us is NRI / Foreign Citizen", impacts: [{ entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: 10 }, { entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Public Limited Company", score: 30 }], nextQuestionId: "Q6B" },
+            { id: "YES_NRI", text: "Yes, one or more of us is NRI / Foreign Citizen", impacts: [{ entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: 30 }, { entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Public Limited Company", score: 30 }], nextQuestionId: "Q6B" },
             { id: "NO_RESIDENT", text: "No, we are all Indian residents", impacts: [], nextQuestionId: "Q6B" },
         ]
     },
@@ -102,9 +102,19 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q6B",
         text: "Do you want your personal assets (home, savings) protected from business risks?",
         options: [
-            { id: "MUST_PROTECT", text: "Yes, Must be Protected", impacts: [{ entity: "Private Limited Company", score: 35 }, { entity: "LLP", score: 30 }, { entity: "OPC", score: 25 }], nextQuestionId: "Q7B" },
-            { id: "NOT_WORRIED", text: "Not Worried / Low Risk", impacts: [{ entity: "Sole Proprietorship", score: 25 }, { entity: "Partnership Firm", score: 20 }], nextQuestionId: "Q7B" },
-            { id: "NOT_SURE", text: "Not Sure", impacts: [{ entity: "Private Limited Company", score: 20 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q7B" },
+            { id: "MUST_PROTECT", text: "Yes, Must be Protected", impacts: [{ entity: "Private Limited Company", score: 35 }, { entity: "LLP", score: 30 }, { entity: "OPC", score: 50 }], nextQuestionId: "Q6B_DIRECTORS" },
+            { id: "NOT_WORRIED", text: "Not Worried / Low Risk", impacts: [{ entity: "Sole Proprietorship", score: 25 }, { entity: "Partnership Firm", score: 20 }], nextQuestionId: "Q6B_DIRECTORS" },
+            { id: "NOT_SURE", text: "Not Sure", impacts: [{ entity: "Private Limited Company", score: 20 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q6B_DIRECTORS" },
+        ]
+    },
+
+    "Q6B_DIRECTORS": {
+        id: "Q6B_DIRECTORS",
+        text: "Do you want to have directors and shareholders in your org? (e.g. in Microsoft Satya Nadella is a director and Bill Gates is a shareholder)",
+        options: [
+            { id: "YES_DIRECTORS", text: "Yes", impacts: [{ entity: "Private Limited Company", score: 30 }, { entity: "OPC", score: 30 }, { entity: "LLP", score: -30 }, { entity: "Sole Proprietorship", score: -30 }], nextQuestionId: "Q7B" },
+            { id: "NO_DIRECTORS", text: "No", impacts: [{ entity: "LLP", score: 20 }, { entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: -20 }, { entity: "OPC", score: -20 }], nextQuestionId: "Q7B" },
+            { id: "NOT_SURE_DIRECTORS", text: "Not Sure", impacts: [], nextQuestionId: "Q7B" },
         ]
     },
 
