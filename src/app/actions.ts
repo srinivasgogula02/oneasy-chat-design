@@ -1,13 +1,48 @@
 "use server";
 
 import Groq from "groq-sdk";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { QUESTIONS, getQuestion } from "@/lib/legal-agent/data";
 import { getNextStep, getInitialState } from "@/lib/legal-agent/engine";
 import { AgentState } from "@/lib/legal-agent/types";
 
+// LLM Provider configuration
+// Set LLM_PROVIDER=vercel in .env to use Vercel AI Gateway
+// Set LLM_PROVIDER=groq (default) to use Groq
+const LLM_PROVIDER = process.env.LLM_PROVIDER || "groq";
+
+// Initialize Groq client
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
+
+// Initialize Vercel AI Gateway client
+const vercelAI = createOpenAI({
+    apiKey: process.env.AI_GATEWAY_API_KEY || process.env.OPENAI_API_KEY,
+    baseURL: process.env.AI_GATEWAY_BASE_URL || "https://api.openai.com/v1",
+});
+
+// Unified LLM call function
+async function callLLM(messages: { role: "user" | "system"; content: string }[], options?: { temperature?: number }): Promise<string> {
+    if (LLM_PROVIDER === "vercel") {
+        // Use Vercel AI SDK
+        const result = await generateText({
+            model: vercelAI(process.env.AI_MODEL || "gpt-4.1"),
+            messages,
+            temperature: options?.temperature,
+        });
+        return result.text;
+    } else {
+        // Use Groq (default)
+        const response = await groq.chat.completions.create({
+            messages,
+            model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+            temperature: options?.temperature,
+        });
+        return response.choices[0]?.message?.content || "";
+    }
+}
 
 export async function processMessage(message: string, currentState: AgentState | null) {
     try {
@@ -16,19 +51,26 @@ export async function processMessage(message: string, currentState: AgentState |
             const lowerMsg = message.toLowerCase();
 
             // Check if user already indicated business or charity intent
-            const businessKeywords = ["business", "profit", "startup", "company", "money", "earn", "sell", "product", "service", "freelance", "trading"];
-            const charityKeywords = ["charity", "non-profit", "nonprofit", "ngo", "trust", "society", "help people", "social"];
+            // Using word boundary matching to avoid false positives (e.g., "earn" in "learning")
+            const businessKeywords = ["business", "startup", "money", "earn", "sell", "product", "service", "freelance", "trading", "shop", "store"];
+            const charityKeywords = ["charity", "non-profit", "nonprofit", "ngo", "trust", "society", "help people", "social work", "section 8", "foundation", "welfare"];
 
-            const indicatesBusiness = businessKeywords.some(kw => lowerMsg.includes(kw));
-            const indicatesCharity = charityKeywords.some(kw => lowerMsg.includes(kw));
+            // Word boundary check helper
+            const hasKeyword = (text: string, keywords: string[]) =>
+                keywords.some(kw => new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text));
 
-            if (indicatesBusiness || indicatesCharity) {
+            const indicatesBusiness = hasKeyword(lowerMsg, businessKeywords);
+            const indicatesCharity = hasKeyword(lowerMsg, charityKeywords);
+
+            // IMPORTANT: Check charity FIRST because "profit" is substring of "non-profit"
+            if (indicatesCharity || indicatesBusiness) {
                 // User already told us their intent - skip Q1 and go to Q2
                 const initialState = getInitialState();
                 const q1 = getQuestion("Q1");
-                const selectedOption = indicatesBusiness
-                    ? q1?.options.find(o => o.id === "BUSINESS")
-                    : q1?.options.find(o => o.id === "CHARITY");
+                // Prioritize charity if both match (e.g., "non-profit" contains "profit")
+                const selectedOption = indicatesCharity
+                    ? q1?.options.find(o => o.id === "CHARITY")
+                    : q1?.options.find(o => o.id === "BUSINESS");
 
                 if (selectedOption) {
                     // Apply Q1 scores
@@ -36,42 +78,39 @@ export async function processMessage(message: string, currentState: AgentState |
                         initialState.scores[impact.entity] = (initialState.scores[impact.entity] || 0) + impact.score;
                     });
                     initialState.answers["Q1"] = selectedOption.id;
-                    initialState.currentQuestionId = selectedOption.nextQuestionId || "Q2B";
+                    // Set next question based on path - no hardcoded fallback
+                    initialState.currentQuestionId = selectedOption.nextQuestionId || (indicatesCharity ? "Q2C" : "Q2B");
 
                     // Get the next question
                     const nextQ = getQuestion(initialState.currentQuestionId);
 
-                    const smartResponse = await groq.chat.completions.create({
-                        messages: [{
-                            role: "user",
-                            content: `You're Oneasy, a friendly legal advisor. User just said: "${message}"
+                    const smartResponse = await callLLM([{
+                        role: "user",
+                        content: `You're Oneasy, a friendly legal advisor. User just said: "${message}"
 
-They want to start a ${indicatesBusiness ? "for-profit business" : "non-profit/charity"}.
+They want to start a ${indicatesCharity ? "non-profit/charity" : "for-profit business"}.
 
 1. Greet warmly and Introduce yourself (1 short sentence).
 2. Ask this question casually: "${nextQ?.text}"
 
 Example: "Hi, I'm Oneasy! That's a great goal. ${nextQ?.text}"
 Keep it under 50 words.`
-                        }],
-                        model: "llama-3.3-70b-versatile",
-                    });
+                    }]);
 
                     return {
-                        response: smartResponse.choices[0]?.message?.content || `Great! I'm Oneasy. ${nextQ?.text}`,
+                        response: smartResponse || `Great! I'm Oneasy. ${nextQ?.text}`,
                         newState: initialState
                     };
                 }
             }
 
             // Generic greeting - ask Q1
-            const introResponse = await groq.chat.completions.create({
-                messages: [{
-                    role: "system",
-                    content: `You are Oneasy, a friendly legal advisor for Indian entrepreneurs.`
-                }, {
-                    role: "user",
-                    content: `User's first message: "${message}"
+            const introResponse = await callLLM([{
+                role: "system",
+                content: `You are Oneasy, a friendly legal advisor for Indian entrepreneurs.`
+            }, {
+                role: "user",
+                content: `User's first message: "${message}"
                     
 Respond naturally:
 1. Greet them briefly
@@ -79,12 +118,10 @@ Respond naturally:
 3. Ask: "So, are you looking to start a business to make money, or something more like a charity or non-profit?"
 
 Keep it under 50 words total.`
-                }],
-                model: "llama-3.3-70b-versatile",
-            });
+            }]);
 
             return {
-                response: introResponse.choices[0]?.message?.content ||
+                response: introResponse ||
                     "Hey! I'm Oneasy, your legal advisor. Are you starting a for-profit business or a non-profit/charity?",
                 newState: getInitialState()
             };
@@ -116,10 +153,9 @@ Keep it under 50 words total.`
             intent = "B";
         } else if (!isLikelyAnswer) {
             // Only do LLM intent check for longer messages that might be off-topic
-            const intentCheck = await groq.chat.completions.create({
-                messages: [{
-                    role: "user",
-                    content: `User said: "${message}"
+            const intentResult = await callLLM([{
+                role: "user",
+                content: `User said: "${message}"
 Current question: "${currentQ.text}"
 
 Is this an answer to the question or completely off-topic?
@@ -127,22 +163,18 @@ A = Answer (even if informal like "yeah", "nope", "money", "just me", etc.)
 C = Completely off-topic (like asking about weather)
 
 Reply with just: A or C`
-                }],
-                model: "llama-3.3-70b-versatile",
-                temperature: 0,
-            });
-            intent = intentCheck.choices[0]?.message?.content?.trim().toUpperCase() || "A";
+            }], { temperature: 0 });
+            intent = intentResult?.trim().toUpperCase() || "A";
         }
 
         // 3. Handle clarification requests
         if (intent === "B") {
-            const clarifyResponse = await groq.chat.completions.create({
-                messages: [{
-                    role: "system",
-                    content: "You are Oneasy, a friendly legal advisor. Explain simply."
-                }, {
-                    role: "user",
-                    content: `The user asked "${message}" about this question: "${currentQ.text}"
+            const clarifyResponse = await callLLM([{
+                role: "system",
+                content: "You are Oneasy, a friendly legal advisor. Explain simply."
+            }, {
+                role: "user",
+                content: `The user asked "${message}" about this question: "${currentQ.text}"
 
 Options are: ${currentQ.options.map(o => o.text).join(", ")}
 
@@ -155,13 +187,10 @@ If they want clarification:
 - Give examples for 2-3 options
 
 Keep it brief, friendly, under 80 words.`
-                }],
-                model: "llama-3.3-70b-versatile",
-            });
+            }]);
 
             return {
-                response: clarifyResponse.choices[0]?.message?.content ||
-                    "Let me explain that differently...",
+                response: clarifyResponse || "Let me explain that differently...",
                 newState: state
             };
         }
@@ -175,10 +204,9 @@ Keep it brief, friendly, under 80 words.`
         }
 
         // 5. Classify the answer
-        const classifyResponse = await groq.chat.completions.create({
-            messages: [{
-                role: "user",
-                content: `TASK: Map user's answer to the best matching option.
+        const classifyResult = await callLLM([{
+            role: "user",
+            content: `TASK: Map user's answer to the best matching option.
 
 QUESTION: "${currentQ.text}"
 USER ANSWER: "${message}"
@@ -197,12 +225,9 @@ RULES:
 - "no", "not really" → negative options
 
 OUTPUT: Just the option ID (e.g., BUSINESS). If truly unclear, output UNKNOWN.`
-            }],
-            model: "llama-3.3-70b-versatile",
-            temperature: 0,
-        });
+        }], { temperature: 0 });
 
-        let classificationId = classifyResponse.choices[0]?.message?.content?.trim() || "UNKNOWN";
+        let classificationId = classifyResult?.trim() || "UNKNOWN";
 
         // Clean up classification - remove any extra text
         classificationId = classificationId.split(/[\s\n]/)[0].toUpperCase();
@@ -220,21 +245,17 @@ OUTPUT: Just the option ID (e.g., BUSINESS). If truly unclear, output UNKNOWN.`
                 classificationId = partialMatch.id;
             } else {
                 // Ask for clarification
-                const rephraseResponse = await groq.chat.completions.create({
-                    messages: [{
-                        role: "user",
-                        content: `You're Oneasy. User said "${message}" but it's unclear.
+                const rephraseResponse = await callLLM([{
+                    role: "user",
+                    content: `You're Oneasy. User said "${message}" but it's unclear.
 Question was: "${currentQ.text}"
 Options: ${currentQ.options.map(o => o.text).join(", ")}
 
 Ask them to clarify in a friendly way. Give hints. Under 40 words.`
-                    }],
-                    model: "llama-3.3-70b-versatile",
-                });
+                }]);
 
                 return {
-                    response: rephraseResponse.choices[0]?.message?.content ||
-                        "Could you tell me more about that?",
+                    response: rephraseResponse || "Could you tell me more about that?",
                     newState: state
                 };
             }
@@ -248,13 +269,12 @@ Ask them to clarify in a friendly way. Give hints. Under 40 words.`
 
         if (nextState.isComplete) {
             // Final recommendation
-            const recResponse = await groq.chat.completions.create({
-                messages: [{
-                    role: "system",
-                    content: "You are Oneasy, a legal expert. Give clear, actionable recommendations."
-                }, {
-                    role: "user",
-                    content: `Based on analysis, recommend: ${nextState.recommendedEntity} (${nextState.confidenceScore}% confidence)
+            const recResponse = await callLLM([{
+                role: "system",
+                content: "You are Oneasy, a legal expert. Give clear, actionable recommendations."
+            }, {
+                role: "user",
+                content: `Based on analysis, recommend: ${nextState.recommendedEntity} (${nextState.confidenceScore}% confidence)
 
 User's answers: ${JSON.stringify(nextState.answers)}
 Final scores: ${JSON.stringify(nextState.scores)}
@@ -264,21 +284,18 @@ Write a recommendation (under 150 words):
 2. 3 reasons why this fits them (bullet points)
 3. Quick next steps
 4. Encouraging closing`
-                }],
-                model: "llama-3.3-70b-versatile",
-            });
+            }]);
 
-            response = recResponse.choices[0]?.message?.content ||
+            response = recResponse ||
                 `🎯 **Recommended: ${nextState.recommendedEntity}** (${nextState.confidenceScore}% confidence)`;
         } else {
             // Ask next question naturally
             const nextQ = getQuestion(nextState.currentQuestionId);
 
             if (nextQ) {
-                const questionResponse = await groq.chat.completions.create({
-                    messages: [{
-                        role: "user",
-                        content: `You're Oneasy. Ask this question casually: "${nextQ.text}"
+                const questionResponse = await callLLM([{
+                    role: "user",
+                    content: `You're Oneasy. Ask this question casually: "${nextQ.text}"
 
 Rules:
 - No "which of the following"
@@ -288,11 +305,9 @@ Rules:
 - Be direct
 
 Just the question, nothing else.`
-                    }],
-                    model: "llama-3.3-70b-versatile",
-                });
+                }]);
 
-                response = questionResponse.choices[0]?.message?.content || nextQ.text;
+                response = questionResponse || nextQ.text;
             } else {
                 response = "Let me finalize my recommendation for you...";
                 nextState.isComplete = true;

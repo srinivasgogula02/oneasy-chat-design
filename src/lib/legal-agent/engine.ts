@@ -64,27 +64,44 @@ function getTopRecommendation(scores: Record<EntityType, number>): { entity: Ent
     let bestEntity: EntityType = "Private Limited Company";
     let maxScore = -Infinity;
     let secondMaxScore = -Infinity;
+    let tiedEntities: EntityType[] = [];
 
     (Object.keys(scores) as EntityType[]).forEach(entity => {
-        const score = scores[entity];
+        const score = Math.max(0, scores[entity]); // Clamp negative to 0
         if (score > maxScore) {
             secondMaxScore = maxScore;
             maxScore = score;
             bestEntity = entity;
+            tiedEntities = [entity];
+        } else if (score === maxScore) {
+            tiedEntities.push(entity);
         } else if (score > secondMaxScore) {
             secondMaxScore = score;
         }
     });
 
+    // If all scores are 0 or negative, return default with low confidence
+    if (maxScore <= 0) {
+        return { entity: "Private Limited Company", confidence: 50 };
+    }
+
     // Calculate confidence based on lead over second place
     let confidence = 75; // Default
-    if (maxScore > 0) {
-        const lead = maxScore - secondMaxScore;
-        if (lead > 50) confidence = 95;
-        else if (lead > 30) confidence = 88;
-        else if (lead > 15) confidence = 82;
-        else if (lead > 5) confidence = 75;
-        else confidence = 68;
+    const lead = maxScore - secondMaxScore;
+
+    // If there's a tie, lower confidence
+    if (tiedEntities.length > 1) {
+        confidence = 60;
+    } else if (lead > 50) {
+        confidence = 95;
+    } else if (lead > 30) {
+        confidence = 88;
+    } else if (lead > 15) {
+        confidence = 82;
+    } else if (lead > 5) {
+        confidence = 75;
+    } else {
+        confidence = 68;
     }
 
     return { entity: bestEntity, confidence };
