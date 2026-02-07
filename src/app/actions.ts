@@ -62,11 +62,12 @@ function toLegacyState(agentState: NewAgentState): LegacyState {
         currentQuestionId: agentState.nextAction === 'complete' ? 'COMPLETE' : 'AGENTIC',
         scores,
         answers: {},
-        conversationHistory: agentState.conversationHistory.map(m => ({
+        history: agentState.conversationHistory.map(m => ({
             role: m.role,
             content: m.content,
         })),
         isBlocked: false,
+        isComplete: agentState.nextAction === 'complete',
     };
 }
 
