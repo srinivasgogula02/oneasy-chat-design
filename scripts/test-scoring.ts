@@ -54,7 +54,7 @@ const testScenarios = [
             { q: "Q6B", o: "NOT_WORRIED" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "UNDER_20L" },
-            { q: "Q9B", o: "OTHER_BIZ" },
+
             { q: "Q10B", o: "INDIA_ONLY" },
             { q: "Q11B", o: "ONE_LOCATION" },
             { q: "Q12B", o: "PERSONAL" }
@@ -73,7 +73,7 @@ const testScenarios = [
             { q: "Q6B", o: "MUST_PROTECT" },
             { q: "Q7B", o: "INVESTORS" },
             { q: "Q8B", o: "1CR_5CR" },
-            { q: "Q9B", o: "TECH" },
+
             { q: "Q10B", o: "FOREIGN_CLIENTS" },
             { q: "Q11B", o: "MULTIPLE_BRANCHES" },
             { q: "Q12B", o: "SELL" }
@@ -92,7 +92,7 @@ const testScenarios = [
             { q: "Q6B", o: "MUST_PROTECT" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "20L_1CR" },
-            { q: "Q9B", o: "TRADING_BIZ" },
+
             { q: "Q10B", o: "INDIA_ONLY" },
             { q: "Q11B", o: "ONE_LOCATION" },
             { q: "Q12B", o: "NOT_SURE_EXIT" }
@@ -112,7 +112,7 @@ const testScenarios = [
             { q: "Q6B", o: "MUST_PROTECT" },
             { q: "Q7B", o: "BANK_LOAN" },
             { q: "Q8B", o: "20L_1CR" },
-            { q: "Q9B", o: "TRADING_BIZ" },
+
             { q: "Q10B", o: "FOREIGN_CLIENTS" },
             { q: "Q11B", o: "MULTIPLE_BRANCHES" },
             { q: "Q12B", o: "FAMILY" }
@@ -124,7 +124,7 @@ const testScenarios = [
         name: "Scenario 5: Professional Services (Doctors/CAs) -> LLP Preference",
         path: [
             { q: "Q1", o: "BUSINESS" },
-            { q: "Q2B", o: "BUILDING_COMPANY" },
+            { q: "Q2B", o: "SOLO_SERVICE" },
             { q: "Q3B", o: "EARNING" },
             { q: "Q4B", o: "FEW_WEEKS" },
             { q: "Q5B", o: "TWO_PEOPLE" },
@@ -132,7 +132,7 @@ const testScenarios = [
             { q: "Q6B", o: "MUST_PROTECT" },
             { q: "Q7B", o: "OWN_MONEY" },
             { q: "Q8B", o: "20L_1CR" },
-            { q: "Q9B", o: "PROFESSIONAL" }, // KEY FACTOR
+            // KEY FACTOR
             { q: "Q10B", o: "INDIA_ONLY" },
             { q: "Q11B", o: "ONE_LOCATION" },
             { q: "Q12B", o: "FAMILY" }

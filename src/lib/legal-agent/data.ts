@@ -39,9 +39,9 @@ export const QUESTIONS: Record<string, Question> = {
         options: [
             { id: "FREELANCER", text: "Freelancer (Writing, coding, design, consulting)", impacts: [{ entity: "Sole Proprietorship", score: 35 }], nextQuestionId: "Q3B" },
             { id: "CONTENT_CREATOR", text: "Content Creator (YouTuber, Influencer)", impacts: [{ entity: "Sole Proprietorship", score: 35 }], nextQuestionId: "Q3B" },
-            { id: "SOLO_SERVICE", text: "Solo Service (Tutor, trainer, etc.)", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 10 }], nextQuestionId: "Q3B" },
-            { id: "TRADING", text: "Trading/Reselling Goods", impacts: [{ entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: 15 }], nextQuestionId: "Q3B" },
-            { id: "BUILDING_COMPANY", text: "Building a Company (Team, brand, growth)", impacts: [{ entity: "Private Limited Company", score: 35 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q3B" },
+            { id: "SOLO_SERVICE", text: "Professional / Service (Doctor, Lawyer, Tutor, Agency)", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 10 }, { entity: "LLP", score: 25 }], nextQuestionId: "Q3B" },
+            { id: "TRADING", text: "Trading/Reselling Goods", impacts: [{ entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: 20 }], nextQuestionId: "Q3B" },
+            { id: "BUILDING_COMPANY", text: "Building a Company / Startup (Tech, Fintech, Manufacturing)", impacts: [{ entity: "Private Limited Company", score: 40 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q3B" },
         ]
     },
 
@@ -124,27 +124,14 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q8B",
         text: "How much do you expect to earn in 2-3 years (Yearly Income)?",
         options: [
-            { id: "UNDER_20L", text: "Less than ₹20 Lakhs", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 15 }], nextQuestionId: "Q9B" },
-            { id: "20L_1CR", text: "₹20 Lakhs - ₹1 Crore", impacts: [{ entity: "LLP", score: 25 }, { entity: "OPC", score: 20 }, { entity: "Private Limited Company", score: 15 }], nextQuestionId: "Q9B" },
-            { id: "1CR_5CR", text: "₹1 Crore - ₹5 Crores", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q9B" },
-            { id: "ABOVE_5CR", text: "More than ₹5 Crores", impacts: [{ entity: "Private Limited Company", score: 30 }], nextQuestionId: "Q9B" },
+            { id: "UNDER_20L", text: "Less than ₹20 Lakhs", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 15 }], nextQuestionId: "Q10B" },
+            { id: "20L_1CR", text: "₹20 Lakhs - ₹1 Crore", impacts: [{ entity: "LLP", score: 25 }, { entity: "OPC", score: 20 }, { entity: "Private Limited Company", score: 15 }], nextQuestionId: "Q10B" },
+            { id: "1CR_5CR", text: "₹1 Crore - ₹5 Crores", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q10B" },
+            { id: "ABOVE_5CR", text: "More than ₹5 Crores", impacts: [{ entity: "Private Limited Company", score: 30 }], nextQuestionId: "Q10B" },
         ]
     },
 
-    "Q9B": {
-        id: "Q9B",
-        text: "What type of business are you starting?",
-        options: [
-            { id: "TECH", text: "Software / Tech / App / SaaS", impacts: [{ entity: "Private Limited Company", score: 25 }], nextQuestionId: "Q10B" },
-            { id: "PROFESSIONAL", text: "Professional Services (CA, Lawyer, Doctor)", impacts: [{ entity: "LLP", score: 35 }], nextQuestionId: "Q10B" },
-            { id: "ONLINE_SELLING", text: "Online Selling (E-commerce)", impacts: [{ entity: "Private Limited Company", score: 25 }], nextQuestionId: "Q10B" },
-            { id: "MANUFACTURING", text: "Manufacturing", impacts: [{ entity: "Private Limited Company", score: 25 }], nextQuestionId: "Q10B" },
-            { id: "TRADING_BIZ", text: "Trading / Import-Export", impacts: [{ entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: 15 }], nextQuestionId: "Q10B" },
-            { id: "FINTECH", text: "Fintech / Lending (NBFC)", impacts: [{ entity: "Private Limited Company", score: 50 }], isHardGate: true, hardGateEntity: "Private Limited Company", nextQuestionId: "COMPLETE" },
-            { id: "FOOD", text: "Restaurant / Food", impacts: [{ entity: "Sole Proprietorship", score: 20 }, { entity: "Private Limited Company", score: 15 }], nextQuestionId: "Q10B" },
-            { id: "OTHER_BIZ", text: "Other Services", impacts: [{ entity: "Sole Proprietorship", score: 15 }, { entity: "LLP", score: 15 }], nextQuestionId: "Q10B" },
-        ]
-    },
+
 
     "Q10B": {
         id: "Q10B",
