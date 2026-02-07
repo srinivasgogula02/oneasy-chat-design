@@ -6,6 +6,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { QUESTIONS, getQuestion } from "@/lib/legal-agent/data";
 import { getNextStep, getInitialState } from "@/lib/legal-agent/engine";
 import { AgentState } from "@/lib/legal-agent/types";
+import { analyzeRecommendation } from "@/lib/legal-agent/analysis";
 
 // LLM Provider configuration
 // Set LLM_PROVIDER=vercel in .env to use Vercel AI Gateway
@@ -376,21 +377,33 @@ Ask them to clarify in a friendly way. Give hints. Under 40 words.`
 
         if (nextState.isComplete) {
             // Final recommendation
+            // Perform detailed analysis
+            const analysis = analyzeRecommendation(nextState);
+            const analysisContext = `
+WHY THIS ENTITY:
+${analysis.winnerReasoning.map(r => `- ${r}`).join("\n")}
+
+ALTERNATIVES & TRADE-OFFS (Explain these clearly):
+${analysis.alternatives.map(a => `- ${a.entity}: ${a.reason}`).join("\n")}
+`;
+
+            // Final recommendation
             const recResponse = await callLLM([{
                 role: "system",
-                content: "You are Oneasy, a legal expert. Give clear, actionable recommendations."
+                content: "You are Oneasy, a legal expert. Give clear, actionable recommendations with deep insights. Be helpful and educational."
             }, {
                 role: "user",
-                content: `Based on analysis, recommend: ${nextState.recommendedEntity} (${nextState.confidenceScore}% confidence)
+                content: `Based on analysis, recommend: ${nextState.recommendedEntity} (${Math.round((nextState.confidenceScore || 0) * 100)}% confidence)
 
-User's answers: ${JSON.stringify(nextState.answers)}
-Final scores: ${JSON.stringify(nextState.scores)}
+ANALYSIS:
+${analysisContext}
 
-Write a recommendation (under 150 words):
-1. 🎯 State the recommendation clearly with confidence
-2. 3 reasons why this fits them (bullet points)
-3. Quick next steps
-4. Encouraging closing`
+Write a recommendation (under 200 words):
+1. 🎯 State the recommendation clearly with confidence.
+2. 💡 Explain WHY (using the "Why This Entity" points).
+3. 🔄 Alternatives: Mention close runner-ups and explain the "Pivot Points" (e.g. "If you had chosen X..."). This is crucial for education.
+4. Quick next steps.
+5. Encouraging closing.`
             }]);
 
             response = recResponse ||
