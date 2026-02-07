@@ -44,15 +44,15 @@ export async function processMessage(message: string, currentState: AgentState |
                     const smartResponse = await groq.chat.completions.create({
                         messages: [{
                             role: "user",
-                            content: `You're Oneasy, a friendly legal advisor. User said: "${message}"
+                            content: `You're Oneasy, a friendly legal advisor. User just said: "${message}"
 
 They want to start a ${indicatesBusiness ? "for-profit business" : "non-profit/charity"}.
 
-1. Greet briefly and acknowledge what they want (1 line)
-2. Introduce yourself as Oneasy (half line)
-3. Ask this question casually: "${nextQ?.text}"
+1. Greet warmly and Introduce yourself (1 short sentence).
+2. Ask this question casually: "${nextQ?.text}"
 
-Keep it under 60 words. Be friendly, no bullet points.`
+Example: "Hi, I'm Oneasy! That's a great goal. ${nextQ?.text}"
+Keep it under 50 words.`
                         }],
                         model: "llama-3.3-70b-versatile",
                     });

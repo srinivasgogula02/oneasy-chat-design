@@ -6,6 +6,7 @@ import { ChatInput } from "./chat-input";
 import { EvaluationPanel } from "./evaluation-panel";
 import { processMessage } from "@/app/actions";
 import { AgentState } from "@/lib/legal-agent/types";
+import { QUESTIONS } from "@/lib/legal-agent/data";
 
 interface Message {
     role: "user" | "assistant";
@@ -41,13 +42,22 @@ export function ProChat() {
         });
     };
 
-    // Only show initial prompts before agent starts
-    const displaySuggestions = !agentState
-        ? [
+    // Determine suggestions to display
+    let displaySuggestions: string[] = [];
+
+    if (!agentState) {
+        // Initial state suggestions
+        displaySuggestions = [
             "I want to start a business",
             "I want to start a non-profit/NGO",
-        ]
-        : [];
+        ];
+    } else {
+        // Current question options
+        const currentQ = QUESTIONS[agentState.currentQuestionId];
+        if (currentQ?.options) {
+            displaySuggestions = currentQ.options.map(o => o.text);
+        }
+    }
 
     return (
         <div className="flex h-screen w-full bg-[#09090b] text-white overflow-hidden font-sans selection:bg-emerald-500/30">
