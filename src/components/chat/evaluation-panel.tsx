@@ -43,8 +43,9 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
     const answeredCount = Object.keys(agentState.answers).length;
     const progressPercent = Math.min((answeredCount / totalQuestions) * 100, 100);
 
-    // Get sorted scores
+    // Get sorted scores - only show entities with positive scores
     const sortedScores = Object.entries(agentState.scores)
+        .filter(([, score]) => score > 0)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5); // Top 5
 
@@ -107,8 +108,8 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.05 }}
                                 className={`relative p-3 rounded-lg ${index === 0
-                                        ? "bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20"
-                                        : "bg-white/[0.02]"
+                                    ? "bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20"
+                                    : "bg-white/[0.02]"
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-1">

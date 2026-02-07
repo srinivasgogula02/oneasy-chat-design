@@ -1,49 +1,54 @@
 import { AgentState, EntityType, INITIAL_SCORES } from "./types";
-import { QUESTIONS } from "./data";
+import { QUESTIONS, getQuestion } from "./data";
 
 export function getNextStep(currentState: AgentState, message: string, classificationId: string): AgentState {
-    const currentQ = QUESTIONS[currentState.currentQuestionId];
-    if (!currentQ) return currentState;
+    const currentQ = getQuestion(currentState.currentQuestionId);
+
+    // Safety: If no current question, mark complete
+    if (!currentQ) {
+        return {
+            ...currentState,
+            isComplete: true,
+            recommendedEntity: getTopRecommendation(currentState.scores).entity,
+            confidenceScore: getTopRecommendation(currentState.scores).confidence,
+        };
+    }
 
     // 1. Update State with new answer
-    const newState = {
+    const newState: AgentState = {
         ...currentState,
         answers: { ...currentState.answers, [currentState.currentQuestionId]: classificationId },
+        scores: { ...currentState.scores },
     };
 
     // 2. Calculate New Scores
     const selectedOption = currentQ.options.find(opt => opt.id === classificationId);
+
     if (selectedOption) {
         selectedOption.impacts.forEach(impact => {
             newState.scores[impact.entity] = (newState.scores[impact.entity] || 0) + impact.score;
         });
 
-        // Check for hard gates (e.g., Education -> Society/Trust)
+        // Check for hard gates (e.g., Fintech -> Pvt Ltd mandatory)
         if (selectedOption.isHardGate && selectedOption.hardGateEntity) {
             newState.isComplete = true;
             newState.recommendedEntity = selectedOption.hardGateEntity;
-            newState.confidenceScore = 100; // Hard rules are 100% confident
+            newState.confidenceScore = 100;
             return newState;
         }
     }
 
     // 3. Determine Next Question
-    let nextQId = "";
+    let nextQId = selectedOption?.nextQuestionId || "";
 
-    // Routing Logic
-    if (selectedOption?.nextQuestionId) {
-        nextQId = selectedOption.nextQuestionId;
-    } else {
-        // Default flow sequence
-        const sequence = ["Q1", "Q2B", "Q3B", "Q4B", "Q5B", "Q6B", "Q7B", "Q8B", "Q9B", "Q10B", "Q11B", "Q12B"];
-        const currentIndex = sequence.indexOf(currentState.currentQuestionId);
-        if (currentIndex >= 0 && currentIndex < sequence.length - 1) {
-            nextQId = sequence[currentIndex + 1];
-        }
+    // Check if next question exists, if not fallback to sequence
+    if (nextQId && nextQId !== "COMPLETE" && !getQuestion(nextQId)) {
+        console.warn(`Question ${nextQId} not found, falling back`);
+        nextQId = "";
     }
 
     // 4. Check for Completion
-    if (!nextQId) {
+    if (!nextQId || nextQId === "COMPLETE") {
         newState.isComplete = true;
         const { entity, confidence } = getTopRecommendation(newState.scores);
         newState.recommendedEntity = entity;
@@ -58,22 +63,29 @@ export function getNextStep(currentState: AgentState, message: string, classific
 function getTopRecommendation(scores: Record<EntityType, number>): { entity: EntityType, confidence: number } {
     let bestEntity: EntityType = "Private Limited Company";
     let maxScore = -Infinity;
-    let totalScore = 0;
+    let secondMaxScore = -Infinity;
 
     (Object.keys(scores) as EntityType[]).forEach(entity => {
         const score = scores[entity];
-        // Filter out negative scenarios effectively by not considering them for max
         if (score > maxScore) {
+            secondMaxScore = maxScore;
             maxScore = score;
             bestEntity = entity;
+        } else if (score > secondMaxScore) {
+            secondMaxScore = score;
         }
-        if (score > 0) totalScore += score;
     });
 
-    // Calculate distinctiveness/confidence (simple heuristic)
-    // Determine mostly by how much it leads the runner-up or max potential
-    // For simplicity, we cap at 98% and map score range to confidence
-    const confidence = Math.min(98, Math.max(70, Math.round((maxScore / 250) * 100)));
+    // Calculate confidence based on lead over second place
+    let confidence = 75; // Default
+    if (maxScore > 0) {
+        const lead = maxScore - secondMaxScore;
+        if (lead > 50) confidence = 95;
+        else if (lead > 30) confidence = 88;
+        else if (lead > 15) confidence = 82;
+        else if (lead > 5) confidence = 75;
+        else confidence = 68;
+    }
 
     return { entity: bestEntity, confidence };
 }

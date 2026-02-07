@@ -21,8 +21,6 @@ interface MessageListProps {
     onSuggestionClick?: (suggestion: string) => void;
 }
 
-
-
 export function MessageList({ messages, isTyping, suggestions, onSuggestionClick }: MessageListProps) {
     const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -33,17 +31,14 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
             const lastMessage = messages[messages.length - 1];
 
             if (lastMessage.role === "assistant") {
-                // Find the index of the corresponding user message (usually the one right before)
                 const userMessageIndex = messages.length - 2;
                 if (userMessageIndex >= 0) {
                     const userMessageEl = document.getElementById(`message-${userMessageIndex}`);
                     if (userMessageEl) {
-                        // Scroll to the user message so context + answer are visible
                         userMessageEl.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
                 }
             } else {
-                // For user messages (just sent), scroll to bottom
                 bottomRef.current?.scrollIntoView({ behavior: "smooth" });
             }
         }
@@ -52,14 +47,41 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
     return (
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
-                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                        <Scale className="w-6 h-6" />
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    {/* Welcome Section */}
+                    <div className="space-y-4 mb-8">
+                        <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto border border-white/10">
+                            <Scale className="w-8 h-8 text-emerald-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-semibold text-white mb-2">Oneasy Legal Advisor</h2>
+                            <p className="text-sm text-white/50 max-w-md">
+                                I'll help you find the perfect legal entity for your venture. Let's start!
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-semibold">Oneasy Legal Advisor</h2>
-                        <p className="text-sm text-white/50">Ask anything about legal entities or choose a suggestion below.</p>
-                    </div>
+
+                    {/* Suggestion Buttons - Prominent and Centered */}
+                    {suggestions && suggestions.length > 0 && (
+                        <div className="w-full max-w-md space-y-3">
+                            <p className="text-xs text-white/40 uppercase tracking-wider mb-4">Choose one to begin</p>
+                            {suggestions.map((suggestion, index) => (
+                                <motion.button
+                                    key={index}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    onClick={() => onSuggestionClick?.(suggestion)}
+                                    className="w-full p-4 text-left bg-gradient-to-r from-white/5 to-white/[0.02] hover:from-emerald-500/10 hover:to-cyan-500/10 border border-white/10 hover:border-emerald-500/30 rounded-xl transition-all flex items-center gap-3 group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
+                                        <Sparkles className="w-5 h-5 text-white/40 group-hover:text-emerald-400 transition-colors" />
+                                    </div>
+                                    <span className="text-white/80 group-hover:text-white font-medium">{suggestion}</span>
+                                </motion.button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             ) : (
                 messages.map((msg, index) => (
@@ -83,7 +105,7 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
 
                         <div className="flex-1 space-y-2 overflow-hidden">
                             <div className="font-medium text-sm text-white/50">
-                                {msg.role === "assistant" ? "AI Assistant" : "You"}
+                                {msg.role === "assistant" ? "Oneasy AI" : "You"}
                             </div>
                             <div className="prose prose-invert prose-sm max-w-none text-white/90 leading-7 tracking-wide">
                                 <ReactMarkdown
@@ -115,7 +137,6 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
                                                 </code>
                                             );
                                         },
-                                        // Basic styling overrides
                                         p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
                                         ul: ({ children }) => <ul className="list-disc pl-4 mb-4 space-y-1">{children}</ul>,
                                         ol: ({ children }) => <ol className="list-decimal pl-4 mb-4 space-y-1">{children}</ol>,
@@ -157,21 +178,6 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
                         <div className="h-4 bg-gradient-to-r from-white/10 to-transparent rounded w-1/4 animate-pulse"></div>
                     </div>
                 </motion.div>
-            )}
-
-            {messages.length === 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-3xl mx-auto w-full mt-8">
-                    {suggestions?.map((suggestion, index) => (
-                        <button
-                            key={index}
-                            onClick={() => onSuggestionClick?.(suggestion)}
-                            className="p-3 text-sm text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center gap-2 group"
-                        >
-                            <Sparkles className="w-4 h-4 text-white/30 group-hover:text-emerald-400 transition-colors" />
-                            <span className="text-white/70 group-hover:text-white">{suggestion}</span>
-                        </button>
-                    ))}
-                </div>
             )}
 
             <div ref={bottomRef} />
