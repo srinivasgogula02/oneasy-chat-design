@@ -27,7 +27,7 @@ export const DEFAULT_GUARDRAILS: GuardrailConfig = {
     maxCostPerSession: 0.50, // $0.50 per session
     requireHumanApprovalThreshold: 0.60, // Require approval if confidence < 60%
     maxToolCallsPerIteration: 5,
-    timeoutMs: 30000, // 30 seconds
+    timeoutMs: 120000, // 120 seconds - LLM calls take 5-7s each
 };
 
 /**
