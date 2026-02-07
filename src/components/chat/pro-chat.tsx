@@ -7,6 +7,7 @@ import { EvaluationPanel } from "./evaluation-panel";
 import { processMessage } from "@/app/actions";
 import { AgentState } from "@/lib/legal-agent/types";
 import { QUESTIONS } from "@/lib/legal-agent/data";
+import { BarChart3, X, MessageSquare } from "lucide-react";
 
 interface Message {
     role: "user" | "assistant";
@@ -17,6 +18,7 @@ export function ProChat() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [agentState, setAgentState] = useState<AgentState | null>(null);
+    const [showPanel, setShowPanel] = useState(false); // Mobile panel toggle
 
     const [, start] = useTransition();
 
@@ -47,6 +49,7 @@ export function ProChat() {
         setMessages([]);
         setAgentState(null);
         setIsTyping(false);
+        setShowPanel(false);
     };
 
     // Determine suggestions to display
@@ -80,23 +83,35 @@ export function ProChat() {
             {/* Ambient Background */}
             <div className="ambient-bg" />
 
-            <div className="flex h-screen w-full relative z-10">
-                {/* Left Half - Chat Area */}
-                <div className="w-1/2 flex flex-col h-full relative border-r border-slate-200/60">
+            <div className="flex flex-col lg:flex-row h-screen w-full relative z-10">
+                {/* Chat Area - Full width on mobile, half on desktop */}
+                <div className={`w-full lg:w-1/2 flex flex-col h-full relative lg:border-r border-slate-200/60 ${showPanel ? 'hidden lg:flex' : 'flex'}`}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl z-10">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl z-10">
+                        <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
                             <span className="text-sm font-medium text-[#01334c]">Oneasy AI</span>
-                            <span className="text-xs bg-[#01334c]/10 text-[#01334c] px-1.5 py-0.5 rounded font-medium">Legal Advisor</span>
+                            <span className="text-xs bg-[#01334c]/10 text-[#01334c] px-1.5 py-0.5 rounded font-medium hidden sm:inline">Legal Advisor</span>
                         </div>
-                        {messages.length > 0 && (
-                            <button
-                                onClick={handleReset}
-                                className="text-xs text-slate-500 hover:text-[#01334c] hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                                New Chat
-                            </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {messages.length > 0 && (
+                                <button
+                                    onClick={handleReset}
+                                    className="text-xs text-slate-500 hover:text-[#01334c] hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors"
+                                >
+                                    New Chat
+                                </button>
+                            )}
+                            {/* Mobile: Show Analysis Button */}
+                            {agentState && (
+                                <button
+                                    onClick={() => setShowPanel(true)}
+                                    className="lg:hidden flex items-center gap-1.5 text-xs bg-[#01334c] text-white px-3 py-1.5 rounded-lg transition-colors"
+                                >
+                                    <BarChart3 className="w-3.5 h-3.5" />
+                                    Analysis
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Messages */}
@@ -114,7 +129,7 @@ export function ProChat() {
                     />
 
                     {/* Input Area */}
-                    <div className="p-4 bg-gradient-to-t from-white via-white to-transparent pb-6">
+                    <div className="p-3 sm:p-4 bg-gradient-to-t from-white via-white to-transparent pb-4 sm:pb-6">
                         <ChatInput
                             onSend={handleSendMessage}
                             disabled={isTyping || agentState?.isComplete}
@@ -129,8 +144,32 @@ export function ProChat() {
                     </div>
                 </div>
 
-                {/* Right Half - Evaluation Panel */}
-                <div className="w-1/2 h-full border-l border-slate-200/60">
+                {/* Evaluation Panel - Desktop: always visible, Mobile: overlay */}
+                <div className={`
+                    ${showPanel ? 'flex' : 'hidden'} lg:flex
+                    fixed lg:relative inset-0 lg:inset-auto
+                    w-full lg:w-1/2 h-full 
+                    lg:border-l border-slate-200/60
+                    z-50 lg:z-10
+                    bg-white
+                `}>
+                    {/* Mobile: Close Button */}
+                    <button
+                        onClick={() => setShowPanel(false)}
+                        className="lg:hidden absolute top-4 right-4 z-10 p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+                    >
+                        <X className="w-5 h-5 text-slate-600" />
+                    </button>
+
+                    {/* Mobile: Back to Chat Button */}
+                    <button
+                        onClick={() => setShowPanel(false)}
+                        className="lg:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-4 py-2.5 bg-[#01334c] text-white rounded-full shadow-lg transition-transform hover:scale-105"
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        Back to Chat
+                    </button>
+
                     <EvaluationPanel agentState={agentState} />
                 </div>
             </div>

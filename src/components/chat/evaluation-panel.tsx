@@ -36,7 +36,7 @@ const SHORT_NAMES: Record<string, string> = {
 export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
     if (!agentState) {
         return (
-            <div className="h-full flex flex-col justify-center p-6 bg-slate-50/50">
+            <div className="h-full w-full flex flex-col justify-center p-4 sm:p-6 bg-slate-50/50 pt-16 lg:pt-6">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm">
                         <Brain className="w-8 h-8 text-[#01334c]" />
@@ -117,7 +117,7 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
     });
 
     return (
-        <div className="h-full flex flex-col bg-slate-50 border-l border-slate-200/60 p-6 overflow-y-auto">
+        <div className="h-full w-full flex flex-col bg-slate-50 lg:border-l border-slate-200/60 p-4 sm:p-6 pt-16 lg:pt-6 pb-24 lg:pb-6 overflow-y-auto">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-[#01334c]/10 flex items-center justify-center">

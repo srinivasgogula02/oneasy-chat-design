@@ -38,7 +38,7 @@ export function ChatInput({ onSend, disabled, placeholder = "Message Oneasy..." 
     };
 
     return (
-        <div className="w-full max-w-3xl mx-auto p-4">
+        <div className="w-full max-w-3xl mx-auto px-2 sm:p-4">
             <div className={cn(
                 "relative flex flex-col w-full bg-slate-50 border border-slate-200 rounded-2xl shadow-sm transition-all duration-300 ease-out focus-within:border-[#01334c]/30 focus-within:ring-1 focus-within:ring-[#01334c]/30 focus-within:shadow-[0_0_20px_rgba(1,51,76,0.1)] overflow-hidden",
                 disabled && "opacity-50 pointer-events-none grayscale bg-slate-100"
