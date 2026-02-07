@@ -23,32 +23,88 @@ const vercelAI = createOpenAI({
     baseURL: process.env.AI_GATEWAY_BASE_URL || "https://api.openai.com/v1",
 });
 
-// Unified LLM call function
+// LLM call timeout (30 seconds)
+const LLM_TIMEOUT_MS = 30000;
+
+// Timeout wrapper for LLM calls
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = LLM_TIMEOUT_MS): Promise<T> {
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('LLM request timeout - please try again')), timeoutMs)
+    );
+    return Promise.race([promise, timeout]);
+}
+
+// Unified LLM call function with timeout protection
 async function callLLM(messages: { role: "user" | "system"; content: string }[], options?: { temperature?: number }): Promise<string> {
-    if (LLM_PROVIDER === "vercel") {
-        // Use Vercel AI SDK
-        const result = await generateText({
-            model: vercelAI(process.env.AI_MODEL || "gpt-4.1"),
-            messages,
-            temperature: options?.temperature,
-        });
-        return result.text;
-    } else {
-        // Use Groq (default)
-        const response = await groq.chat.completions.create({
-            messages,
-            model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-            temperature: options?.temperature,
-        });
-        return response.choices[0]?.message?.content || "";
+    const llmPromise = (async () => {
+        if (LLM_PROVIDER === "vercel") {
+            // Use Vercel AI SDK
+            const result = await generateText({
+                model: vercelAI(process.env.AI_MODEL || "gpt-4.1"),
+                messages,
+                temperature: options?.temperature,
+            });
+            return result.text || "";
+        } else {
+            // Use Groq (default)
+            const response = await groq.chat.completions.create({
+                messages,
+                model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+                temperature: options?.temperature,
+            });
+            return response.choices[0]?.message?.content || "";
+        }
+    })();
+
+    return withTimeout(llmPromise, LLM_TIMEOUT_MS);
+}
+
+// ======= PRODUCTION HARDENING =======
+
+// Input validation constants
+const MAX_MESSAGE_LENGTH = 2000; // Prevent abuse with very long messages
+const MIN_MESSAGE_LENGTH = 1;
+
+// Sanitize user input - remove potential XSS or injection attempts
+function sanitizeInput(input: string): string {
+    return input
+        .trim()
+        .slice(0, MAX_MESSAGE_LENGTH) // Enforce max length
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Remove control characters
+}
+
+// Validate input before processing
+function validateInput(message: string): { valid: boolean; error?: string } {
+    if (!message || typeof message !== 'string') {
+        return { valid: false, error: 'Invalid message format' };
     }
+    if (message.trim().length < MIN_MESSAGE_LENGTH) {
+        return { valid: false, error: 'Message is too short' };
+    }
+    if (message.length > MAX_MESSAGE_LENGTH) {
+        return { valid: false, error: 'Message is too long' };
+    }
+    return { valid: true };
 }
 
 export async function processMessage(message: string, currentState: AgentState | null) {
     try {
+        // === Input Validation ===
+        const validation = validateInput(message);
+        if (!validation.valid) {
+            return {
+                response: validation.error || "Invalid input",
+                newState: currentState || getInitialState()
+            };
+        }
+
+        // Sanitize the input
+        const sanitizedMessage = sanitizeInput(message);
+
         // 1. Handle first message - Initialize and potentially skip Q1 if user already stated intent
         if (!currentState) {
-            const lowerMsg = message.toLowerCase();
+            const lowerMsg = sanitizedMessage.toLowerCase();
 
             // Check if user already indicated business or charity intent
             // Using word boundary matching to avoid false positives (e.g., "earn" in "learning")
@@ -86,7 +142,7 @@ export async function processMessage(message: string, currentState: AgentState |
 
                     const smartResponse = await callLLM([{
                         role: "user",
-                        content: `You're Oneasy, a friendly legal advisor. User just said: "${message}"
+                        content: `You're Oneasy, a friendly legal advisor. User just said: "${sanitizedMessage}"
 
 They want to start a ${indicatesCharity ? "non-profit/charity" : "for-profit business"}.
 
@@ -110,7 +166,7 @@ Keep it under 50 words.`
                 content: `You are Oneasy, a friendly legal advisor for Indian entrepreneurs.`
             }, {
                 role: "user",
-                content: `User's first message: "${message}"
+                content: `User's first message: "${sanitizedMessage}"
                     
 Respond naturally:
 1. Greet them briefly
@@ -155,7 +211,7 @@ Keep it under 50 words total.`
             // Only do LLM intent check for longer messages that might be off-topic
             const intentResult = await callLLM([{
                 role: "user",
-                content: `User said: "${message}"
+                content: `User said: "${sanitizedMessage}"
 Current question: "${currentQ.text}"
 
 Is this an answer to the question or completely off-topic?
@@ -174,7 +230,7 @@ Reply with just: A or C`
                 content: "You are Oneasy, a friendly legal advisor. Explain simply."
             }, {
                 role: "user",
-                content: `The user asked "${message}" about this question: "${currentQ.text}"
+                content: `The user asked "${sanitizedMessage}" about this question: "${currentQ.text}"
 
 Options are: ${currentQ.options.map(o => o.text).join(", ")}
 
@@ -209,7 +265,7 @@ Keep it brief, friendly, under 80 words.`
             content: `TASK: Map user's answer to the best matching option.
 
 QUESTION: "${currentQ.text}"
-USER ANSWER: "${message}"
+USER ANSWER: "${sanitizedMessage}"
 
 OPTIONS:
 ${currentQ.options.map(o => `${o.id}: ${o.text}`).join("\n")}
@@ -247,7 +303,7 @@ OUTPUT: Just the option ID (e.g., BUSINESS). If truly unclear, output UNKNOWN.`
                 // Ask for clarification
                 const rephraseResponse = await callLLM([{
                     role: "user",
-                    content: `You're Oneasy. User said "${message}" but it's unclear.
+                    content: `You're Oneasy. User said "${sanitizedMessage}" but it's unclear.
 Question was: "${currentQ.text}"
 Options: ${currentQ.options.map(o => o.text).join(", ")}
 
@@ -262,7 +318,7 @@ Ask them to clarify in a friendly way. Give hints. Under 40 words.`
         }
 
         // 6. Process answer and get next state
-        const nextState = getNextStep(state, message, classificationId);
+        const nextState = getNextStep(state, sanitizedMessage, classificationId);
 
         // 7. Generate response
         let response = "";
