@@ -71,10 +71,19 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q5B",
         text: "How many people will own/run this business?",
         options: [
-            { id: "JUST_ME", text: "Just Me (Solo)", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 30 }, { entity: "Private Limited Company", score: -5 }], nextQuestionId: "Q6B" },
-            { id: "TWO_PEOPLE", text: "Me and One Partner", impacts: [{ entity: "LLP", score: 25 }, { entity: "Private Limited Company", score: 25 }, { entity: "Partnership Firm", score: 20 }], nextQuestionId: "Q6B" },
-            { id: "SMALL_TEAM", text: "Small Team (3-5 people)", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q6B" },
-            { id: "LARGE_GROUP", text: "Larger Group (6+ people)", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "Public Limited Company", score: 15 }], nextQuestionId: "Q6B" },
+            { id: "JUST_ME", text: "Just Me (Solo)", impacts: [{ entity: "Sole Proprietorship", score: 30 }, { entity: "OPC", score: 30 }], nextQuestionId: "Q5B_NRI" },
+            { id: "TWO_PEOPLE", text: "Me and One Partner", impacts: [{ entity: "LLP", score: 30 }, { entity: "Private Limited Company", score: 30 }, { entity: "Partnership Firm", score: 30 }, { entity: "Public Limited Company", score: 30 }, { entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: -1000 }], nextQuestionId: "Q5B_NRI" },
+            { id: "SMALL_TEAM", text: "Small Team (3-5 people)", impacts: [{ entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Partnership Firm", score: 30 }, { entity: "Public Limited Company", score: 30 }, { entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: -1000 }], nextQuestionId: "Q5B_NRI" },
+            { id: "LARGE_GROUP", text: "Larger Group (6+ people)", impacts: [{ entity: "Private Limited Company", score: 30 }, { entity: "Public Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: -1000 }], nextQuestionId: "Q5B_NRI" },
+        ]
+    },
+
+    "Q5B_NRI": {
+        id: "Q5B_NRI",
+        text: "Are you or any of your partners Non-Resident Indians (NRI) or foreign citizens?",
+        options: [
+            { id: "YES_NRI", text: "Yes, I am / One of us is NRI", impacts: [{ entity: "Sole Proprietorship", score: -1000 }, { entity: "OPC", score: 10 }, { entity: "Private Limited Company", score: 30 }, { entity: "LLP", score: 30 }, { entity: "Public Limited Company", score: 30 }], nextQuestionId: "Q6B" },
+            { id: "NO_RESIDENT", text: "No, we are all Indian residents", impacts: [], nextQuestionId: "Q6B" },
         ]
     },
 
