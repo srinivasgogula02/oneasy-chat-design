@@ -40,7 +40,7 @@ async function callLLM(messages: { role: "user" | "system"; content: string }[],
         if (LLM_PROVIDER === "vercel") {
             // Use Vercel AI SDK
             const result = await generateText({
-                model: vercelAI(process.env.AI_MODEL || "gpt-4.1"),
+                model: vercelAI(process.env.AI_MODEL || "gpt-4o"),
                 messages,
                 temperature: options?.temperature,
             });
@@ -429,5 +429,23 @@ Just the question, nothing else.`
             response: "I hit a small bump. Could you say that again?",
             newState: currentState || getInitialState()
         };
+    }
+}
+
+// Verification action
+export async function testLLMConnection() {
+    try {
+        const start = Date.now();
+        const response = await callLLM([{ role: "user", content: "Test connection. Reply with 'OK'." }], { temperature: 0 });
+        const duration = Date.now() - start;
+        return {
+            success: true,
+            provider: LLM_PROVIDER,
+            model: LLM_PROVIDER === "vercel" ? (process.env.AI_MODEL || "gpt-4.1") : (process.env.GROQ_MODEL || "llama-3.3-70b-versatile"),
+            response,
+            duration
+        };
+    } catch (e: any) {
+        return { success: false, provider: LLM_PROVIDER, error: e.message };
     }
 }
