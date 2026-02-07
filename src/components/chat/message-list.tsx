@@ -31,8 +31,25 @@ export function MessageList({ messages, isTyping, onSuggestionClick }: MessageLi
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (messages.length > 0 || isTyping) {
+        if (isTyping) {
             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        } else if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+
+            if (lastMessage.role === "assistant") {
+                // Find the index of the corresponding user message (usually the one right before)
+                const userMessageIndex = messages.length - 2;
+                if (userMessageIndex >= 0) {
+                    const userMessageEl = document.getElementById(`message-${userMessageIndex}`);
+                    if (userMessageEl) {
+                        // Scroll to the user message so context + answer are visible
+                        userMessageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }
+            } else {
+                // For user messages (just sent), scroll to bottom
+                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+            }
         }
     }, [messages, isTyping]);
 
@@ -52,8 +69,10 @@ export function MessageList({ messages, isTyping, onSuggestionClick }: MessageLi
                 messages.map((msg, index) => (
                     <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        id={`message-${index}`}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                         className={cn(
                             "group flex gap-4 max-w-3xl mx-auto w-full",
                             msg.role === "assistant" ? "" : "bg-transparent"
@@ -70,7 +89,7 @@ export function MessageList({ messages, isTyping, onSuggestionClick }: MessageLi
                             <div className="font-medium text-sm text-white/50">
                                 {msg.role === "assistant" ? "AI Assistant" : "You"}
                             </div>
-                            <div className="prose prose-invert prose-sm max-w-none text-white/90 leading-relaxed">
+                            <div className="prose prose-invert prose-sm max-w-none text-white/90 leading-7 tracking-wide">
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
@@ -126,15 +145,22 @@ export function MessageList({ messages, isTyping, onSuggestionClick }: MessageLi
             )}
 
             {isTyping && (
-                <div className="flex gap-4 max-w-3xl mx-auto w-full animate-pulse">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-4 max-w-3xl mx-auto w-full"
+                >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-white/10 bg-emerald-500/10 text-emerald-500">
-                        <Scale className="w-5 h-5" />
+                        <Scale className="w-5 h-5 animate-pulse" />
                     </div>
                     <div className="flex-1 space-y-2">
-                        <div className="font-medium text-sm text-white/50">AI Assistant</div>
-                        <div className="h-4 bg-white/10 rounded w-1/4"></div>
+                        <div className="font-medium text-sm text-white/50 flex items-center gap-2">
+                            Oneasy AI
+                            <span className="text-xs bg-white/5 px-1.5 py-0.5 rounded text-white/30 animate-pulse">Analyzing...</span>
+                        </div>
+                        <div className="h-4 bg-gradient-to-r from-white/10 to-transparent rounded w-1/4 animate-pulse"></div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {messages.length === 0 && (

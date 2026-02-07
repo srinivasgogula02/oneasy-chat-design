@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState, KeyboardEvent } from "react";
-import { cn } from "@/lib/utils";
 
+import { cn } from "@/lib/utils";
 import { Send, Paperclip, Mic, StopCircle } from "lucide-react";
 
 interface ChatInputProps {
@@ -39,8 +39,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     return (
         <div className="w-full max-w-3xl mx-auto p-4">
             <div className={cn(
-                "relative flex flex-col w-full bg-[#18181b] border border-white/10 rounded-2xl shadow-lg transition-all focus-within:border-white/20 focus-within:shadow-xl overflow-hidden",
-                disabled && "opacity-50 pointer-events-none"
+                "relative flex flex-col w-full bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl transition-all duration-300 ease-out focus-within:border-emerald-500/30 focus-within:ring-1 focus-within:ring-emerald-500/30 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.1)] overflow-hidden",
+                disabled && "opacity-50 pointer-events-none grayscale"
             )}>
                 <textarea
                     ref={textareaRef}
@@ -71,9 +71,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
                         }}
                         disabled={!value.trim() || disabled}
                         className={cn(
-                            "p-2 rounded-lg transition-all duration-200",
+                            "p-2 rounded-lg transition-all duration-300 ease-out",
                             value.trim() && !disabled
-                                ? "bg-white text-black hover:bg-gray-200"
+                                ? "bg-white text-black hover:bg-emerald-400 hover:text-black hover:scale-105 active:scale-95 shadow-lg shadow-white/10"
                                 : "bg-white/5 text-white/20 cursor-not-allowed"
                         )}
                     >
