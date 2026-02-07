@@ -96,6 +96,22 @@ export class AgentOrchestrator {
             sessionId
         );
 
+        // **FIX: Persist extracted factors to state**
+        if (observation.updatedFactors && observation.updatedFactors.length > 0) {
+            // Import state utilities
+            const { addFactor, updateHypotheses } = await import('./state');
+
+            // Add each extracted factor to state
+            for (const factor of observation.updatedFactors) {
+                state = addFactor(state, factor);
+            }
+
+            // Update hypotheses if they changed
+            if (observation.updatedHypotheses) {
+                state = updateHypotheses(state, observation.updatedHypotheses);
+            }
+        }
+
         // REFLECT: Assess progress
         const reflection = await reflect(state);
 

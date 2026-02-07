@@ -191,6 +191,7 @@ export async function observe(
                     data: 'Scores updated based on new information',
                     impact: 'Confidence scores recalculated',
                     updatedFactors: newFactors,
+                    updatedHypotheses: updatedHypotheses,
                 };
             }
 
