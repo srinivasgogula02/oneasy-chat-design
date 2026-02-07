@@ -117,16 +117,19 @@ export function extractFactorsFromAnswer(
         });
     }
 
-    // Founders count detection
-    if (answer.includes('solo') || answer.includes('just me') || answer.includes('alone')) {
+    // Founders count detection - IMPROVED FOR 'only me'
+    const soloPatterns = /\b(only me|just me|solo|alone|myself|i'?m the only|single founder|one person)\b/i;
+    const multiplePatterns = /\b(partner|co-?founder|two|multiple|team|us|we)\b/i;
+
+    if (soloPatterns.test(answer)) {
         factors.push({
             type: 'founders',
             value: 'solo',
             impact: 0.9,
-            confidence: 0.9,
+            confidence: 0.95,
             source: questionContext,
         });
-    } else if (answer.includes('partner') || answer.includes('two') || answer.includes('multiple')) {
+    } else if (multiplePatterns.test(answer)) {
         factors.push({
             type: 'founders',
             value: 'multiple',

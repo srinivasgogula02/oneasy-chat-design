@@ -147,7 +147,7 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q10B",
         text: "Will you have foreign clients or receive money from abroad?",
         options: [
-            { id: "FOREIGN_INVESTORS", text: "Yes, Foreign Investors", impacts: [{ entity: "Private Limited Company", score: 45 }], nextQuestionId: "Q11B" },
+            
             { id: "FOREIGN_CLIENTS", text: "Yes, Foreign Clients (Service)", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "LLP", score: 20 }], nextQuestionId: "Q11B" },
             { id: "MAYBE_FUTURE", text: "Maybe in Future", impacts: [{ entity: "Private Limited Company", score: 20 }], nextQuestionId: "Q11B" },
             { id: "INDIA_ONLY", text: "No, India Only", impacts: [], nextQuestionId: "Q11B" },
