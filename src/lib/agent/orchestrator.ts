@@ -208,8 +208,8 @@ export class AgentOrchestrator {
  * Create a new orchestrator instance
  */
 export function createOrchestrator(
-    maxIterations?: number,
-    confidenceThreshold?: number
+    maxIterations: number = 10,
+    confidenceThreshold: number = 0.75
 ): AgentOrchestrator {
     return new AgentOrchestrator(maxIterations, confidenceThreshold);
 }
