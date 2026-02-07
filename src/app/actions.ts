@@ -88,6 +88,48 @@ function validateInput(message: string): { valid: boolean; error?: string } {
     return { valid: true };
 }
 
+// Check for illegal or harmful content
+async function checkContentSafety(message: string): Promise<{ safe: boolean; reason?: string }> {
+    // 1. Fast Keyword Check (Strict blocking for obvious violations)
+    const unsafeKeywords = [
+        "drug", "cocaine", "clean money", "launder money", "money laundering",
+        "bomb", "kill", "smuggle", "fake currency", "hack bank",
+        "hurt someone", "murder", "suicide", "terror", "weapon"
+    ];
+    const lowerMsg = message.toLowerCase();
+    if (unsafeKeywords.some(kw => lowerMsg.includes(kw))) {
+        return { safe: false, reason: "Contains unsafe keywords" };
+    }
+
+    // 2. LLM Contextual Check
+    const safetyCheck = await callLLM([{
+        role: "user",
+        content: `TASK: Safety Content Classification
+USER INPUT: "${message}"
+
+Determine if this input violates safety policies by filtering for:
+1. Illegal Acts: Promoting, admitting to, or asking how to commit crimes.
+2. Harmful Intent: Violence, self-harm, harassment, hate speech.
+3. Sexually Explicit: NSFW content.
+
+RULES:
+- "How do I launder money?" -> UNSAFE
+- "I want to hurt someone" -> UNSAFE
+- "Start a bakery" -> SAFE
+- "Tax planning" -> SAFE
+
+OUTPUT JSON ONLY:
+{ "safe": boolean, "reason": "short explanation if unsafe" }`
+    }], { temperature: 0 });
+
+    try {
+        const result = JSON.parse(safetyCheck.trim());
+        return { safe: result.safe, reason: result.reason };
+    } catch (e) {
+        return { safe: true }; // Fallback if LLM fails but keywords passed
+    }
+}
+
 export async function processMessage(message: string, currentState: AgentState | null) {
     try {
         // === Input Validation ===
@@ -96,6 +138,15 @@ export async function processMessage(message: string, currentState: AgentState |
             return {
                 response: validation.error || "Invalid input",
                 newState: currentState || getInitialState()
+            };
+        }
+
+        // === Safety Check ===
+        const safety = await checkContentSafety(message);
+        if (!safety.safe) {
+            return {
+                response: "⚠️ Safety Alert: This content violates our safety policies. Examples of violations include illegal activities, violence, or hate speech.",
+                newState: { ...(currentState || getInitialState()), isBlocked: true }
             };
         }
 

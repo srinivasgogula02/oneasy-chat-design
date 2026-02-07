@@ -83,6 +83,27 @@ export function ProChat() {
             {/* Ambient Background */}
             <div className="ambient-bg" />
 
+            {/* Safety Block Alert */}
+            {agentState?.isBlocked && (
+                <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">⚠️</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">Safety Alert</h3>
+                        <p className="text-slate-600 mb-6">
+                            This conversation has been flagged for safety violations. Please restart the chat to continue with a different topic.
+                        </p>
+                        <button
+                            onClick={handleReset}
+                            className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors"
+                        >
+                            Restart Chat
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col lg:flex-row h-screen w-full relative z-10">
                 {/* Chat Area - Full width on mobile, half on desktop */}
                 <div className={`w-full lg:w-1/2 flex flex-col h-full relative lg:border-r border-slate-200/60 ${showPanel ? 'hidden lg:flex' : 'flex'}`}>
@@ -173,7 +194,7 @@ export function ProChat() {
                     <div className="p-3 sm:p-4 bg-gradient-to-t from-white via-white to-transparent pb-4 sm:pb-6">
                         <ChatInput
                             onSend={handleSendMessage}
-                            disabled={isTyping || agentState?.isComplete}
+                            disabled={isTyping || agentState?.isComplete || agentState?.isBlocked}
                             placeholder={
                                 agentState?.isComplete
                                     ? "Consultation complete! Click 'Start a new consultation' above"

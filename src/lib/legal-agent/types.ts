@@ -38,6 +38,7 @@ export interface AgentState {
     recommendedEntity?: EntityType;
     confidenceScore?: number;
     history: { role: "user" | "assistant" | "system"; content: string }[];
+    isBlocked?: boolean; // New safety flag
 }
 
 export const INITIAL_SCORES: Record<EntityType, number> = {
