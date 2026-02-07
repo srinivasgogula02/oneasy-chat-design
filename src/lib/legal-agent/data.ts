@@ -148,8 +148,9 @@ export const QUESTIONS: Record<string, Question> = {
         id: "Q11B",
         text: "Do you plan to open more branches or give franchise?",
         options: [
-            { id: "FRANCHISE", text: "Yes, Franchise Model", impacts: [{ entity: "Private Limited Company", score: 30 }], nextQuestionId: "Q12B" },
-            { id: "MULTIPLE_BRANCHES", text: "Yes, Multiple Branches", impacts: [{ entity: "Private Limited Company", score: 25 }, { entity: "LLP", score: 15 }], nextQuestionId: "Q12B" },
+            { id: "FRANCHISE", text: "Yes, Franchise Model", impacts: [{ entity: "LLP", score: 20 }, { entity: "Private Limited Company", score: 30 }, { entity: "Sole Proprietorship", score: 0 }, { entity: "OPC", score: -30 }, { entity: "Partnership Firm", score: -10 }], nextQuestionId: "Q12B" },
+            { id: "MULTIPLE_BRANCHES", text: "Yes, Multiple Branches", impacts: [{ entity: "LLP", score: 30 }, { entity: "Private Limited Company", score: 30 }, { entity: "Sole Proprietorship", score: 15 }, { entity: "OPC", score: 30 }, { entity: "Partnership Firm", score: 20 }], nextQuestionId: "Q12B" },
+            { id: "BOTH_EXPANSION", text: "Both (Franchise & Multiple Branches)", impacts: [{ entity: "LLP", score: 20 }, { entity: "Private Limited Company", score: 30 }, { entity: "Sole Proprietorship", score: 0 }, { entity: "OPC", score: -30 }, { entity: "Partnership Firm", score: -10 }], nextQuestionId: "Q12B" },
             { id: "ONE_LOCATION", text: "No, One Location", impacts: [{ entity: "Sole Proprietorship", score: 10 }, { entity: "LLP", score: 10 }], nextQuestionId: "Q12B" },
             { id: "ONLINE_ONLY", text: "Fully Online", impacts: [{ entity: "Private Limited Company", score: 15 }, { entity: "LLP", score: 15 }, { entity: "OPC", score: 15 }], nextQuestionId: "Q12B" },
         ]

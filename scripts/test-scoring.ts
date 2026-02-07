@@ -162,6 +162,61 @@ const testScenarios = [
             { q: "Q6C", o: "PAN_INDIA" }
         ],
         expectedTop: "Section 8 Company"
+    },
+    {
+        name: "Scenario 8: Franchise Model (Should Favor Pvt Ltd, Penalize OPC)",
+        path: [
+            { q: "Q1", o: "BUSINESS" },
+            { q: "Q2B", o: "BUILDING_COMPANY" },
+            { q: "Q3B", o: "RUNNING_WELL" },
+            { q: "Q4B", o: "NO_RUSH" },
+            { q: "Q5B", o: "SMALL_TEAM" },
+            { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
+            { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q7B", o: "OWN_MONEY" },
+            { q: "Q8B", o: "1CR_5CR" },
+            { q: "Q10B", o: "INDIA_ONLY" },
+            { q: "Q11B", o: "FRANCHISE" }, // KEY: Pvt +30, OPC -30
+            { q: "Q12B", o: "SELL" }
+        ],
+        expectedTop: "Private Limited Company",
+        forbidden: "OPC"
+    },
+    {
+        name: "Scenario 9: Multiple Branches (Flexible, OPC allowed)",
+        path: [
+            { q: "Q1", o: "BUSINESS" },
+            { q: "Q2B", o: "TRADING" },
+            { q: "Q3B", o: "EARNING" },
+            { q: "Q4B", o: "THIS_WEEK" },
+            { q: "Q5B", o: "JUST_ME" },
+            { q: "Q5B_NRI_SOLO", o: "NO_RESIDENT" },
+            { q: "Q6B", o: "NOT_WORRIED" },
+            { q: "Q7B", o: "OWN_MONEY" },
+            { q: "Q8B", o: "20L_1CR" },
+            { q: "Q10B", o: "INDIA_ONLY" },
+            { q: "Q11B", o: "MULTIPLE_BRANCHES" }, // KEY: OPC +30
+            { q: "Q12B", o: "PERSONAL" }
+        ],
+        expectedTop: "Sole Proprietorship" // Low risk + Own Money + Trading = Prop, even with branches
+    },
+    {
+        name: "Scenario 10: Both Expansion (Should act like Franchise)",
+        path: [
+            { q: "Q1", o: "BUSINESS" },
+            { q: "Q2B", o: "BUILDING_COMPANY" },
+            { q: "Q3B", o: "RUNNING_WELL" },
+            { q: "Q4B", o: "NO_RUSH" },
+            { q: "Q5B", o: "SMALL_TEAM" },
+            { q: "Q5B_NRI_MULTI", o: "NO_RESIDENT" },
+            { q: "Q6B", o: "MUST_PROTECT" },
+            { q: "Q7B", o: "INVESTORS" },
+            { q: "Q8B", o: "ABOVE_5CR" },
+            { q: "Q10B", o: "INDIA_ONLY" },
+            { q: "Q11B", o: "BOTH_EXPANSION" }, // KEY: Same as Franchise
+            { q: "Q12B", o: "SELL" }
+        ],
+        expectedTop: "Private Limited Company"
     }
 ];
 
