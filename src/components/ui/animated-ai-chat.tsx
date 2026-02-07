@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useTransition } from "react";
-import { getGroqResponse } from "@/app/actions";
+import { processMessage } from "@/app/actions";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -266,7 +266,7 @@ export function AnimatedAIChat() {
             adjustHeight(true);
 
             startTransition(async () => {
-                const response = await getGroqResponse(userMessage);
+                const { response } = await processMessage(userMessage, null);
                 setIsTyping(false);
                 setMessages(prev => [...prev, { role: "assistant", content: response }]);
             });

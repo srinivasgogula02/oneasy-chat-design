@@ -17,17 +17,13 @@ interface Message {
 interface MessageListProps {
     messages: Message[];
     isTyping?: boolean;
+    suggestions?: string[];
     onSuggestionClick?: (suggestion: string) => void;
 }
 
-const suggestions = [
-    "Difference between LLC and C-Corp?",
-    "Best state to incorporate for SaaS?",
-    "Do I need a registered agent?",
-    "Pros and cons of Sole Proprietorship",
-];
 
-export function MessageList({ messages, isTyping, onSuggestionClick }: MessageListProps) {
+
+export function MessageList({ messages, isTyping, suggestions, onSuggestionClick }: MessageListProps) {
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -165,7 +161,7 @@ export function MessageList({ messages, isTyping, onSuggestionClick }: MessageLi
 
             {messages.length === 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-3xl mx-auto w-full mt-8">
-                    {suggestions.map((suggestion, index) => (
+                    {suggestions?.map((suggestion, index) => (
                         <button
                             key={index}
                             onClick={() => onSuggestionClick?.(suggestion)}

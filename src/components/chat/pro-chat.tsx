@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
-import { getGroqResponse } from "@/app/actions";
+import { processMessage } from "@/app/actions";
+import { AgentState } from "@/lib/legal-agent/types";
+import { QUESTIONS } from "@/lib/legal-agent/data";
 
 interface Message {
     role: "user" | "assistant";
@@ -13,8 +15,9 @@ interface Message {
 export function ProChat() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
+    const [agentState, setAgentState] = useState<AgentState | null>(null);
 
-    const [, startTransition] = useTransition();
+    const [, start] = useTransition();
 
     const handleSendMessage = async (content: string) => {
         // Add user message immediately
@@ -22,19 +25,30 @@ export function ProChat() {
         setMessages((prev) => [...prev, userMessage]);
         setIsTyping(true);
 
-        startTransition(async () => {
+        start(async () => {
             try {
-                const response = await getGroqResponse(content);
+                const { response, newState } = await processMessage(content, agentState);
+                setAgentState(newState);
+
                 const aiMessage: Message = { role: "assistant", content: response };
                 setMessages((prev) => [...prev, aiMessage]);
             } catch (error) {
                 console.error("Failed to get response", error);
-                // Optional: Add error message to chat
+                setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
             } finally {
                 setIsTyping(false);
             }
         });
     };
+
+    // Only show initial prompts before agent starts - once in flow, pure natural language
+    // NO chips during agent flow - user types naturally, AI classifies via Groq
+    const displaySuggestions = !agentState
+        ? [
+            "I want to start a business",
+            "I want to start a non-profit/NGO",
+        ]
+        : [];
 
     return (
         <div className="flex h-screen w-full bg-[#09090b] text-white overflow-hidden font-sans selection:bg-emerald-500/30">
@@ -62,6 +76,7 @@ export function ProChat() {
                     <MessageList
                         messages={messages}
                         isTyping={isTyping}
+                        suggestions={displaySuggestions}
                         onSuggestionClick={handleSendMessage}
                     />
 
