@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated large files
+*.jsonl
+*.log
+logic_test_results.jsonl
+sample_results.jsonl
+logic_test.log

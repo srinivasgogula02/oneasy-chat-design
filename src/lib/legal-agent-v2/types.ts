@@ -4,7 +4,6 @@
  */
 
 import { z } from 'zod';
-import { EntityType } from '../legal-agent/types';
 
 // ========== User Profile Schema ==========
 
@@ -51,10 +50,31 @@ export const RecommendationOutputSchema = z.object({
 
 export type RecommendationOutput = z.infer<typeof RecommendationOutputSchema>;
 
+// ========== Suitability Analysis Schema ==========
+
+// New: Direct AI Scoring Schema
+export const EntityScoreSchema = z.object({
+    score: z.number().min(0).max(100).describe('Suitability score (0-100) based on current context'),
+    reason: z.string().describe('Brief reason for this score (max 10 words, e.g., "Best for VC funding", "High liability risk")'),
+    is_excluded: z.boolean().default(false).describe('True if this entity is legally impossible or highly unsuitable'),
+});
+
+export const SuitabilityAnalysisSchema = z.object({
+    "Private Limited Company": EntityScoreSchema,
+    "LLP": EntityScoreSchema,
+    "One Person Company (OPC)": EntityScoreSchema,
+    "Partnership Firm": EntityScoreSchema,
+    "Sole Proprietorship": EntityScoreSchema,
+}).describe('Real-time evaluation of all entity types');
+
+export type SuitabilityAnalysis = z.infer<typeof SuitabilityAnalysisSchema>;
+
+
 // ========== LLM Response Schema ==========
 
 export const LLMResponseSchema = z.object({
     thought_process: ThoughtProcessSchema,
+    suitability_analysis: SuitabilityAnalysisSchema,
     next_action: z.enum(['ask_question', 'recommend']).describe('What to do next'),
     question: z.string().optional().describe('Next question to ask user (if action is ask_question)'),
     follow_up: z.string().optional().describe('Optional clarifying sub-question'),

@@ -56,7 +56,7 @@ export function MessageList({ messages, isTyping, suggestions, onSuggestionClick
                         <div>
                             <h2 className="text-xl sm:text-2xl font-semibold text-[#01334c] mb-2">Oneasy Legal Advisor</h2>
                             <p className="text-sm text-slate-500 max-w-md">
-                                I'll help you find the perfect legal entity for your venture. Let's start!
+                                I&apos;ll help you find the perfect legal entity for your venture. Let&apos;s start!
                             </p>
                         </div>
                     </div>

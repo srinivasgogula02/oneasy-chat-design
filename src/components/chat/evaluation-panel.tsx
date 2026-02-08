@@ -1,6 +1,6 @@
 "use client";
 
-import { AgentState, EntityType } from "@/lib/legal-agent/types";
+import { AgentState } from "@/lib/legal-agent/types";
 import { QUESTIONS } from "@/lib/legal-agent/data";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, TrendingUp, CheckCircle2, Sparkles, Building2 } from "lucide-react";
@@ -8,18 +8,6 @@ import { Brain, TrendingUp, CheckCircle2, Sparkles, Building2 } from "lucide-rea
 interface EvaluationPanelProps {
     agentState: AgentState | null;
 }
-
-const ENTITY_ICONS: Record<string, string> = {
-    "Private Limited Company": "🏢",
-    "LLP": "🤝",
-    "OPC": "👤",
-    "Partnership Firm": "👥",
-    "Sole Proprietorship": "🧑‍💼",
-    "Public Limited Company": "🏛️",
-    "Section 8 Company": "💚",
-    "Trust": "🏦",
-    "Society": "🌍",
-};
 
 const SHORT_NAMES: Record<string, string> = {
     "Private Limited Company": "Pvt Ltd",
@@ -43,7 +31,7 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
                     </div>
                     <h3 className="text-lg font-semibold text-[#01334c] mb-2">AI Analysis Ready</h3>
                     <p className="text-sm text-slate-500 max-w-[200px] mx-auto">
-                        I'm ready to evaluate your business needs across key factors:
+                        I&apos;m ready to evaluate your business needs across key factors:
                     </p>
                 </div>
 

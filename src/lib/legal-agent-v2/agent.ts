@@ -29,11 +29,12 @@ export async function processLegalAgentMessage(
         // Call LLM with retry logic
         const response = await callLLMWithRetry(messages, currentProfile);
         return response;
-    } catch (error: any) {
-        console.error('[Agent Error]', error);
+    } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('[Agent Error]', err);
 
         // Fallback response if LLM fails
-        return createFallbackResponse(currentProfile, error.message);
+        return createFallbackResponse(currentProfile, err.message);
     }
 }
 
@@ -129,9 +130,10 @@ async function callLLMWithRetry(
             factor: 2,
             minTimeout: 1000,
             maxTimeout: 5000,
-            onFailedAttempt: (error) => {
-                const err = error as any;
-                console.warn(`[LLM Retry] Attempt ${error.attemptNumber} failed:`, err.message || 'Unknown error');
+            onFailedAttempt: (error: unknown) => {
+                const err = error instanceof Error ? error : new Error(String(error));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                console.warn(`[LLM Retry] Attempt ${(error as any).attemptNumber} failed:`, err.message);
             },
         }
     );
@@ -157,6 +159,13 @@ function createFallbackResponse(profile: UserProfile, errorMessage: string): LLM
             missing_critical_factors: missingFactors,
             completeness_score: calculateCompletenessScore(profile),
             current_understanding: summarizeProfile(profile),
+        },
+        suitability_analysis: {
+            "Private Limited Company": { score: 50, reason: "Insufficient data", is_excluded: false },
+            "LLP": { score: 50, reason: "Insufficient data", is_excluded: false },
+            "One Person Company (OPC)": { score: 50, reason: "Insufficient data", is_excluded: false },
+            "Partnership Firm": { score: 50, reason: "Insufficient data", is_excluded: false },
+            "Sole Proprietorship": { score: 50, reason: "Insufficient data", is_excluded: false },
         },
         next_action: 'ask_question',
         question: fallbackQuestion,

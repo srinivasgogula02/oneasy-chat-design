@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Legal Entity Suggestor V2 - Example Usage
  * Demonstrates how to use the AI-driven agent
@@ -22,7 +23,7 @@ async function exampleTechStartup() {
         sessionId
     );
     console.log('AI:', result.response);
-    console.log('Profile:', result.profile);
+    console.log('Profile:', result.updated_profile);
     console.log('Completeness:', result.thoughtProcess?.completeness_score, '%\n');
 
     // User provides co-founder info
@@ -79,7 +80,7 @@ async function exampleHardConstraint() {
         sessionId
     );
     console.log('AI:', result.response);
-    console.log('Profile:', result.profile);
+    console.log('Profile:', result.updated_profile);
     console.log('Analysis:', result.thoughtProcess?.analysis);
 }
 
@@ -103,12 +104,12 @@ async function exampleProfessionalServices() {
 
     console.log('\n=== Professional Services Example ===\n');
 
-    let result = await processLegalAgentV2Message(
+    const result = await processLegalAgentV2Message(
         "I'm a CA starting a consultancy with 2 partners",
         sessionId
     );
     console.log('AI:', result.response);
-    console.log('Profile:', result.profile);
+    console.log('Profile:', result.updated_profile);
 }
 
 // Run examples (comment out as needed)

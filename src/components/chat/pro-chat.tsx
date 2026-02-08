@@ -4,17 +4,12 @@ import { useState, useTransition } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { EvaluationPanel } from "./evaluation-panel";
-import { processMessage } from "@/app/actions";
 import { processLegalAgentV2Message } from "@/app/actions"; // V2 Agent
-import { AgentState, INITIAL_SCORES, EntityType } from "@/lib/legal-agent/types";
+import { AgentState, INITIAL_SCORES } from "@/lib/legal-agent/types";
 import { INITIAL_PROFILE } from "@/lib/legal-agent-v2/types";
 import { mapV2ProfileToLegacyAnswers, calculateScoresFromV2Profile } from "@/lib/legal-agent-v2/mapper";
-import { QUESTIONS } from "@/lib/legal-agent/data";
 import { BarChart3, X, MessageSquare } from "lucide-react";
 import { nanoid } from "nanoid";
-
-
-// ... inside component ...
 
 
 interface Message {
@@ -28,7 +23,6 @@ export function ProChat() {
     const [agentState, setAgentState] = useState<AgentState | null>(null);
     const [showPanel, setShowPanel] = useState(false); // Mobile panel toggle
     const [sessionId] = useState(nanoid()); // V2 Agent session ID
-    const [useV2Agent, setUseV2Agent] = useState(true); // Toggle for V2 agent
 
     const [, start] = useTransition();
 
@@ -40,53 +34,56 @@ export function ProChat() {
 
         start(async () => {
             try {
-                if (useV2Agent) {
-                    // Use V2 AI-driven agent
-                    const result = await processLegalAgentV2Message(content, sessionId);
+                // Use V2 AI-driven agent
+                const result = await processLegalAgentV2Message(content, sessionId);
 
-                    // Convert V2 state to legacy format for UI compatibility
-                    const profileInUse = result.profile || INITIAL_PROFILE;
+                // Convert V2 state to legacy format for UI compatibility
+                // We use type assertion here because result comes from server action which might return error object
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const resultData = result as any;
+                const profileInUse = resultData.updated_profile || resultData.profile || INITIAL_PROFILE;
 
-                    // 1. Map V2 profile to legacy answers for "Your Profile" section
-                    const dynamicAnswers = mapV2ProfileToLegacyAnswers(profileInUse);
+                // 1. Map V2 profile to legacy answers for "Your Profile" section
+                const dynamicAnswers = mapV2ProfileToLegacyAnswers(profileInUse);
 
-                    // 2. Calculate dynamic scores for "Entity Analysis" chart based on profile
-                    // This makes the chart alive during the conversation
-                    let scores = calculateScoresFromV2Profile(profileInUse);
+                // 2. Use Direct AI Scoring for "Entity Analysis" chart
+                // We map the numeric scores from the AI response to the chart
+                let scores = { ...INITIAL_SCORES };
 
-                    if (result.recommendation) {
-                        // If final recommendation exists, override with AI confidence
-                        scores[result.recommendation.entity as EntityType] = result.recommendation.confidence;
-
-                        // Set alternative option score
-                        if (result.recommendation.alternative) {
-                            const altScore = Math.max(0, result.recommendation.confidence - 20);
-                            scores[result.recommendation.alternative.entity as EntityType] = altScore;
-                        }
-                    }
-
-                    const legacyState: AgentState = {
-                        currentQuestionId: result.isComplete ? 'COMPLETE' : 'AGENTIC',
-                        scores,
-                        answers: dynamicAnswers, // Populated from V2 profile
-                        history: messages.map(m => ({ role: m.role, content: m.content })),
-                        isComplete: result.isComplete || false,
-                        isBlocked: false,
-                        recommendedEntity: result.recommendation?.entity as any,
-                        confidenceScore: result.recommendation?.confidence,
+                if (result.suitability_analysis) {
+                    const analysis = result.suitability_analysis as Record<string, { score: number }>;
+                    scores = {
+                        "Private Limited Company": analysis["Private Limited Company"]?.score || 0,
+                        "LLP": analysis["LLP"]?.score || 0,
+                        "OPC": analysis["One Person Company (OPC)"]?.score || 0, // Map "One Person Company (OPC)" to "OPC"
+                        "Partnership Firm": analysis["Partnership Firm"]?.score || 0,
+                        "Sole Proprietorship": analysis["Sole Proprietorship"]?.score || 0,
+                        "Public Limited Company": 0,
+                        "Section 8 Company": 0,
+                        "Trust": 0,
+                        "Society": 0
                     };
-                    setAgentState(legacyState);
-
-                    const aiMessage: Message = { role: "assistant", content: result.response };
-                    setMessages((prev) => [...prev, aiMessage]);
                 } else {
-                    // Use legacy V1 agent
-                    const { response, newState } = await processMessage(content, agentState);
-                    setAgentState(newState);
-
-                    const aiMessage: Message = { role: "assistant", content: response };
-                    setMessages((prev) => [...prev, aiMessage]);
+                    // Fallback to calculator if for some reason analysis is missing (shouldn't happen)
+                    scores = calculateScoresFromV2Profile(profileInUse);
                 }
+
+                const legacyState: AgentState = {
+                    currentQuestionId: result.isComplete ? 'COMPLETE' : 'AGENTIC',
+                    scores,
+                    answers: dynamicAnswers, // Populated from V2 profile
+                    history: messages.map(m => ({ role: m.role, content: m.content })),
+                    isComplete: result.isComplete || false,
+                    isBlocked: false,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    recommendedEntity: result.recommendation?.entity as any,
+                    confidenceScore: result.recommendation?.confidence,
+                };
+                setAgentState(legacyState);
+
+                const aiMessage: Message = { role: "assistant", content: result.response };
+                setMessages((prev) => [...prev, aiMessage]);
+
             } catch (error) {
                 console.error("Failed to get response", error);
                 setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I hit a small bump. Could you say that again?" }]);
@@ -121,13 +118,8 @@ export function ProChat() {
             "Tell me about compliance requirements",
             "Start a new consultation",
         ];
-    } else {
-        // Current question options
-        const currentQ = QUESTIONS[agentState.currentQuestionId];
-        if (currentQ?.options) {
-            displaySuggestions = currentQ.options.map(o => o.text);
-        }
     }
+    // No fallback to QUESTIONS for AGENTIC state as it is dynamic
 
     // Welcome message for empty chat
     const welcomeMessage: Message | null = messages.length === 0 ? {

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useTransition } from "react";
-import { processMessage } from "@/app/actions";
+// import { processMessage } from "@/app/actions"; // REMOVED
+import { processLegalAgentV2Message } from "@/app/actions"; // ADDED
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { nanoid } from "nanoid"; // ADDED
 import {
     ImageIcon,
     Figma,
@@ -174,6 +176,7 @@ export function AnimatedAIChat() {
     });
     const [inputFocused, setInputFocused] = useState(false);
     const commandPaletteRef = useRef<HTMLDivElement>(null);
+    const [sessionId] = useState(nanoid()); // ADDED
 
     const handleValueChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
@@ -266,9 +269,10 @@ export function AnimatedAIChat() {
             adjustHeight(true);
 
             startTransition(async () => {
-                const { response } = await processMessage(userMessage, null);
+                // Use V2 Agent
+                const result = await processLegalAgentV2Message(userMessage, sessionId);
                 setIsTyping(false);
-                setMessages(prev => [...prev, { role: "assistant", content: response }]);
+                setMessages(prev => [...prev, { role: "assistant", content: result.response }]);
             });
         }
     };
@@ -581,8 +585,8 @@ export function AnimatedAIChat() {
                         damping: 25,
                         stiffness: 150,
                         mass: 0.5,
-                    }}
-                />
+                        }}
+                    />
             )}
         </div>
     );
