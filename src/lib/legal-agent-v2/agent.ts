@@ -6,6 +6,7 @@
 import { generateObject } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import pRetry from 'p-retry';
+import { withSupermemory } from '@supermemory/tools/ai-sdk';
 import {
     LLMResponseSchema,
     type LLMResponse,
@@ -23,11 +24,12 @@ import SYSTEM_PROMPT from './systemPrompt';
  */
 export async function processLegalAgentMessage(
     messages: Message[],
-    currentProfile: UserProfile = INITIAL_PROFILE
+    currentProfile: UserProfile = INITIAL_PROFILE,
+    userId: string
 ): Promise<LLMResponse> {
     try {
         // Call LLM with retry logic
-        const response = await callLLMWithRetry(messages, currentProfile);
+        const response = await callLLMWithRetry(messages, currentProfile, userId);
         return response;
     } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
@@ -44,7 +46,8 @@ export async function processLegalAgentMessage(
  */
 async function callLLMWithRetry(
     messages: Message[],
-    profile: UserProfile
+    profile: UserProfile,
+    userId: string
 ): Promise<LLMResponse> {
     return pRetry(
         async () => {
@@ -76,11 +79,11 @@ async function callLLMWithRetry(
                     apiKey: process.env.AI_GATEWAY_API_KEY || '',
                 });
 
-                model = openai(aiModel);
+                model = withSupermemory(openai(aiModel), userId, { addMemory: 'never', mode: 'full' });
             } else {
                 // Use Groq (default)
                 const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-                model = groq(groqModel);
+                model = withSupermemory(groq(groqModel), userId, { addMemory: 'never', mode: 'full' });
             }
 
             // Call LLM with structured output
@@ -107,11 +110,38 @@ async function callLLMWithRetry(
             // Type-safe access to the object
             const llmResponse = result.object as LLMResponse;
 
+            // Handle memory persistence manually if new memories are generated
+            if (llmResponse.new_memories && llmResponse.new_memories.length > 0) {
+                try {
+                    const { Supermemory } = await import('supermemory');
+                    const supermemory = new Supermemory({
+                        apiKey: process.env.SUPERMEMORY_API_KEY,
+                    });
+
+                    await Promise.all(
+                        llmResponse.new_memories.map(async (memory) => {
+                            try {
+                                console.log('[Agent] Saving memory:', memory);
+                                await supermemory.memories.add({
+                                    content: memory,
+                                    containerTags: [userId],
+                                });
+                            } catch (memError) {
+                                console.error('[Agent] Failed to save memory:', memError);
+                            }
+                        })
+                    );
+                } catch (err) {
+                    console.error('[Agent] Supermemory client initialization failed:', err);
+                }
+            }
+
             console.log('[V2 Agent] Response:', JSON.stringify({
                 thought: llmResponse.thought_process,
                 action: llmResponse.next_action,
                 question: llmResponse.question,
-                recommendation: llmResponse.recommendation?.entity
+                recommendation: llmResponse.recommendation?.entity,
+                memories_saved: llmResponse.new_memories?.length || 0
             }, null, 2));
 
             // Validate action consistency

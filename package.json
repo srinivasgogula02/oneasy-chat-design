@@ -13,6 +13,7 @@
     "@ai-sdk/openai": "^3.0.26",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
+    "@supermemory/tools": "^1.4.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^6.0.77",
     "class-variance-authority": "^0.7.1",

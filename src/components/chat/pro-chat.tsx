@@ -19,12 +19,17 @@ interface Message {
     content: string;
 }
 
-export function ProChat() {
+interface ProChatProps {
+    userId?: string;
+}
+
+export function ProChat({ userId }: ProChatProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [agentState, setAgentState] = useState<AgentState | null>(null);
     const [showPanel, setShowPanel] = useState(false); // Mobile panel toggle
-    const [sessionId] = useState(nanoid()); // V2 Agent session ID
+    // Use authenticated User ID as session ID if available, otherwise generate random ID
+    const [sessionId] = useState(userId || nanoid());
     const router = useRouter();
     const supabase = createClient();
 

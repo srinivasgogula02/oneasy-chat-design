@@ -84,6 +84,7 @@ export const LLMResponseSchema = z.object({
     question: z.string().optional().describe('Next question to ask user (if action is ask_question)'),
     follow_up: z.string().optional().describe('Optional clarifying sub-question'),
     recommendation: RecommendationOutputSchema.optional().describe('Final recommendation (if action is recommend)'),
+    new_memories: z.array(z.string()).optional().describe('List of critical facts to save to long-term memory'),
     updated_profile: UserProfileSchema.describe('Updated user profile based on latest information'),
 });
 

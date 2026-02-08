@@ -83,7 +83,8 @@ export async function processLegalAgentV2Message(
         // Process with AI agent
         const llmResponse = await processLegalAgentMessage(
             messages,
-            state.profile
+            state.profile,
+            sessionId // Using sessionId as userId for Supermemory context
         );
 
         // Update state
