@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { EvaluationPanel } from "./evaluation-panel";
@@ -23,6 +25,14 @@ export function ProChat() {
     const [agentState, setAgentState] = useState<AgentState | null>(null);
     const [showPanel, setShowPanel] = useState(false); // Mobile panel toggle
     const [sessionId] = useState(nanoid()); // V2 Agent session ID
+    const router = useRouter();
+    const supabase = createClient();
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.refresh();
+        router.push('/login');
+    };
 
     const [, start] = useTransition();
 
@@ -212,6 +222,12 @@ export function ProChat() {
                                     New Chat
                                 </button>
                             )}
+                            <button
+                                onClick={handleLogout}
+                                className="text-xs text-slate-500 hover:text-red-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                                Logout
+                            </button>
                             {/* Mobile: Show Analysis Button */}
                             {agentState && (
                                 <button
