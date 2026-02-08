@@ -76,7 +76,60 @@ export class AgentOrchestrator {
         // Increment iteration counter
         state = incrementIteration(state);
 
-        // THINK: Analyze and decide next action
+        // **CRITICAL FIX: Extract factors from user's previous answer FIRST**
+        // This ensures we update state before deciding what to ask next
+        const lastUserMessage = state.conversationHistory
+            .filter(m => m.role === 'user')
+            .slice(-1)[0];
+
+        const lastAssistantMessage = state.conversationHistory
+            .filter(m => m.role === 'assistant')
+            .slice(-2, -1)[0]; // Get the question that was asked
+
+        console.log(`\n[ITER ${state.iterationCount}] Last user:`, lastUserMessage?.content);
+        console.log(`[ITER ${state.iterationCount}] Last assistant:`, lastAssistantMessage?.content);
+
+        if (lastUserMessage && state.iterationCount > 1) {
+            // Extract factors from the user's answer
+            const { extractFactorsFromAnswer } = await import('./question-generator');
+            const { updateConfidenceScores, applyConstraints } = await import('./scoring');
+            const { addFactor, updateHypotheses } = await import('./state');
+
+            const newFactors = extractFactorsFromAnswer(
+                lastUserMessage.content,
+                lastAssistantMessage?.content || ''
+            );
+
+            console.log(`[ITER ${state.iterationCount}] Extracted factors:`, JSON.stringify(newFactors, null, 2));
+
+            // Persist each factor to state
+            for (const factor of newFactors) {
+                state = addFactor(state, factor);
+            }
+
+            console.log('[DEBUG] Total gathered factors:', state.gatheredFactors.length);
+
+            // Update scores if we extracted any factors
+            if (newFactors.length > 0) {
+                let updatedHypotheses = state.currentHypotheses;
+                for (const factor of newFactors) {
+                    updatedHypotheses = updateConfidenceScores(
+                        { ...state, currentHypotheses: updatedHypotheses },
+                        factor
+                    );
+                }
+
+                // Apply hard constraints
+                updatedHypotheses = applyConstraints(
+                    updatedHypotheses,
+                    state.gatheredFactors // Already includes new factors
+                );
+
+                state = updateHypotheses(state, updatedHypotheses);
+            }
+        }
+
+        // THINK: Analyze and decide next action (now with updated state)
         const thought = await this.withRetry(() => think(state), sessionId);
 
         // Check if we should terminate
@@ -95,22 +148,6 @@ export class AgentOrchestrator {
             () => observe(state, action),
             sessionId
         );
-
-        // **FIX: Persist extracted factors to state**
-        if (observation.updatedFactors && observation.updatedFactors.length > 0) {
-            // Import state utilities
-            const { addFactor, updateHypotheses } = await import('./state');
-
-            // Add each extracted factor to state
-            for (const factor of observation.updatedFactors) {
-                state = addFactor(state, factor);
-            }
-
-            // Update hypotheses if they changed
-            if (observation.updatedHypotheses) {
-                state = updateHypotheses(state, observation.updatedHypotheses);
-            }
-        }
 
         // REFLECT: Assess progress
         const reflection = await reflect(state);

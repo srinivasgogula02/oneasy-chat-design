@@ -222,7 +222,7 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
             )}
 
             {/* Final Recommendation Teaser */}
-            {agentState.isComplete && agentState.recommendedEntity && (
+            {agentState.recommendedEntity && (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}

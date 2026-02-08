@@ -5,9 +5,17 @@ import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { EvaluationPanel } from "./evaluation-panel";
 import { processMessage } from "@/app/actions";
-import { AgentState } from "@/lib/legal-agent/types";
+import { processLegalAgentV2Message } from "@/app/actions"; // V2 Agent
+import { AgentState, INITIAL_SCORES, EntityType } from "@/lib/legal-agent/types";
+import { INITIAL_PROFILE } from "@/lib/legal-agent-v2/types";
+import { mapV2ProfileToLegacyAnswers, calculateScoresFromV2Profile } from "@/lib/legal-agent-v2/mapper";
 import { QUESTIONS } from "@/lib/legal-agent/data";
 import { BarChart3, X, MessageSquare } from "lucide-react";
+import { nanoid } from "nanoid";
+
+
+// ... inside component ...
+
 
 interface Message {
     role: "user" | "assistant";
@@ -19,6 +27,8 @@ export function ProChat() {
     const [isTyping, setIsTyping] = useState(false);
     const [agentState, setAgentState] = useState<AgentState | null>(null);
     const [showPanel, setShowPanel] = useState(false); // Mobile panel toggle
+    const [sessionId] = useState(nanoid()); // V2 Agent session ID
+    const [useV2Agent, setUseV2Agent] = useState(true); // Toggle for V2 agent
 
     const [, start] = useTransition();
 
@@ -30,11 +40,53 @@ export function ProChat() {
 
         start(async () => {
             try {
-                const { response, newState } = await processMessage(content, agentState);
-                setAgentState(newState);
+                if (useV2Agent) {
+                    // Use V2 AI-driven agent
+                    const result = await processLegalAgentV2Message(content, sessionId);
 
-                const aiMessage: Message = { role: "assistant", content: response };
-                setMessages((prev) => [...prev, aiMessage]);
+                    // Convert V2 state to legacy format for UI compatibility
+                    const profileInUse = result.profile || INITIAL_PROFILE;
+
+                    // 1. Map V2 profile to legacy answers for "Your Profile" section
+                    const dynamicAnswers = mapV2ProfileToLegacyAnswers(profileInUse);
+
+                    // 2. Calculate dynamic scores for "Entity Analysis" chart based on profile
+                    // This makes the chart alive during the conversation
+                    let scores = calculateScoresFromV2Profile(profileInUse);
+
+                    if (result.recommendation) {
+                        // If final recommendation exists, override with AI confidence
+                        scores[result.recommendation.entity as EntityType] = result.recommendation.confidence;
+
+                        // Set alternative option score
+                        if (result.recommendation.alternative) {
+                            const altScore = Math.max(0, result.recommendation.confidence - 20);
+                            scores[result.recommendation.alternative.entity as EntityType] = altScore;
+                        }
+                    }
+
+                    const legacyState: AgentState = {
+                        currentQuestionId: result.isComplete ? 'COMPLETE' : 'AGENTIC',
+                        scores,
+                        answers: dynamicAnswers, // Populated from V2 profile
+                        history: messages.map(m => ({ role: m.role, content: m.content })),
+                        isComplete: result.isComplete || false,
+                        isBlocked: false,
+                        recommendedEntity: result.recommendation?.entity as any,
+                        confidenceScore: result.recommendation?.confidence,
+                    };
+                    setAgentState(legacyState);
+
+                    const aiMessage: Message = { role: "assistant", content: result.response };
+                    setMessages((prev) => [...prev, aiMessage]);
+                } else {
+                    // Use legacy V1 agent
+                    const { response, newState } = await processMessage(content, agentState);
+                    setAgentState(newState);
+
+                    const aiMessage: Message = { role: "assistant", content: response };
+                    setMessages((prev) => [...prev, aiMessage]);
+                }
             } catch (error) {
                 console.error("Failed to get response", error);
                 setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I hit a small bump. Could you say that again?" }]);
@@ -62,8 +114,13 @@ export function ProChat() {
             "I want to start a non-profit/NGO",
         ];
     } else if (agentState.isComplete) {
-        // Completion state - show restart option
-        displaySuggestions = ["Start a new consultation"];
+        // Completion state - show follow-up options instead of just restart
+        displaySuggestions = [
+            "Why did you recommend this?",
+            "What are the alternatives?",
+            "Tell me about compliance requirements",
+            "Start a new consultation",
+        ];
     } else {
         // Current question options
         const currentQ = QUESTIONS[agentState.currentQuestionId];
@@ -194,12 +251,12 @@ export function ProChat() {
                     <div className="p-3 sm:p-4 bg-gradient-to-t from-white via-white to-transparent pb-4 sm:pb-6">
                         <ChatInput
                             onSend={handleSendMessage}
-                            disabled={isTyping || agentState?.isComplete || agentState?.isBlocked}
+                            disabled={isTyping || agentState?.isBlocked}
                             placeholder={
-                                agentState?.isComplete
-                                    ? "Consultation complete! Click 'Start a new consultation' above"
-                                    : isTyping
-                                        ? "Thinking..."
+                                isTyping
+                                    ? "Thinking..."
+                                    : agentState?.recommendedEntity
+                                        ? "Ask follow-up questions or start a new consultation..."
                                         : "Message Oneasy..."
                             }
                         />

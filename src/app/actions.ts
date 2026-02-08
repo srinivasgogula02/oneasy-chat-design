@@ -58,10 +58,41 @@ function toLegacyState(agentState: NewAgentState): LegacyState {
         scores[h.entity] = Math.round(h.confidence * 300);
     });
 
+    console.log('[DEBUG] toLegacyState - Gathered factors count:', agentState.gatheredFactors.length);
+    console.log('[DEBUG] toLegacyState - Top scores:', scores);
+
+    // **FIX: Build answers object from gathered factors**
+    // Map factors to simulated question IDs so UI can track progress
+    const answers: Record<string, string> = {};
+
+    agentState.gatheredFactors.forEach((factor) => {
+        // Map factor types to question-like keys
+        if (factor.type === 'other' && factor.value === 'business') {
+            answers['Q1_business_type'] = 'for-profit';
+        } else if (factor.type === 'other' && factor.value === 'charity') {
+            answers['Q1_business_type'] = 'non-profit';
+        } else if (factor.type === 'founders') {
+            answers['Q2_founders'] = factor.value;
+        } else if (factor.type === 'nri') {
+            answers['Q3_nri'] = factor.value;
+        } else if (factor.type === 'investment') {
+            answers['Q4_funding'] = factor.value;
+        } else if (factor.type === 'risk') {
+            answers['Q5_liability'] = factor.value;
+        } else if (factor.type === 'expansion') {
+            answers['Q6_expansion'] = factor.value;
+        } else if (factor.type === 'directors') {
+            answers['Q7_structure'] = factor.value;
+        } else {
+            // Generic fallback for other factors
+            answers[`factor_${factor.type}`] = factor.value;
+        }
+    });
+
     return {
         currentQuestionId: agentState.nextAction === 'complete' ? 'COMPLETE' : 'AGENTIC',
         scores,
-        answers: {},
+        answers, // Now properly populated!
         history: agentState.conversationHistory.map(m => ({
             role: m.role,
             content: m.content,
@@ -171,11 +202,12 @@ export async function processMessage(
     // Convert legacy state to agentic state
     let agenticState: NewAgentState | null = null;
 
-    if (legacyState?.conversationHistory) {
+    if (legacyState?.history) {
         agenticState = initializeAgentState();
-        agenticState.conversationHistory = legacyState.conversationHistory.map(m => ({
+        agenticState.conversationHistory = legacyState.history.map((m: any) => ({
             role: m.role as 'user' | 'assistant',
             content: m.content,
+            timestamp: new Date(),
         }));
     }
 
@@ -215,3 +247,117 @@ export async function getSessionStats(sessionId: string) {
         logs: logger.getSessionLogs(sessionId),
     };
 }
+
+// ========== LEGAL ENTITY SUGGESTOR V2 ==========
+// AI-driven agent with Chain-of-Thought reasoning
+
+import {
+    processLegalAgentMessage,
+    formatRecommendation,
+    initializeLegalAgentState,
+    updateAgentState,
+    type AgentState as V2AgentState,
+    type UserProfile,
+    type Message as V2Message,
+} from '@/lib/legal-agent-v2';
+
+// In-memory state storage (would use Redis/DB in production)
+const agentSessions = new Map<string, V2AgentState>();
+
+/**
+ * Process message with Legal Entity Suggestor V2 Agent
+ * Uses LLM-driven reasoning instead of deterministic scoring
+ */
+export async function processLegalAgentV2Message(
+    message: string,
+    sessionId: string
+) {
+    try {
+        // Input validation
+        const validation = validateInput(message);
+        if (!validation.valid) {
+            return {
+                response: validation.error || "Invalid input",
+                error: true,
+            };
+        }
+
+        const sanitizedMessage = sanitizeInput(message);
+
+        // Initialize or retrieve session state
+        let state = agentSessions.get(sessionId);
+        if (!state) {
+            state = initializeLegalAgentState(sessionId);
+            agentSessions.set(sessionId, state);
+        }
+
+        // Prepare messages for LLM
+        const messages: V2Message[] = [
+            ...state.conversationHistory,
+            { role: 'user', content: sanitizedMessage },
+        ];
+
+        console.log(`[V2 Action] Processing message for session ${sessionId}`);
+        console.log('[V2 Action] User Input:', sanitizedMessage);
+        console.log('[V2 Action] Current Profile:', JSON.stringify(state.profile, null, 2));
+
+        // Process with AI agent
+        const llmResponse = await processLegalAgentMessage(
+            messages,
+            state.profile
+        );
+
+        // Update state
+        const updatedState = updateAgentState(state, sanitizedMessage, llmResponse);
+        agentSessions.set(sessionId, updatedState);
+
+        // Format response
+        // Format response
+        let response = llmResponse.next_action === 'ask_question'
+            ? (llmResponse.question || 'How can I help you?')
+            : formatRecommendation(llmResponse.recommendation);
+
+        // If recommendation is made, append a follow-up prompt
+        if (llmResponse.next_action === 'recommend') {
+            response += '\n\n💬 **Have questions?** Feel free to ask me anything about this recommendation, alternatives, or compliance requirements!';
+        }
+
+        console.log('[V2 Action] Final Response:', response);
+        console.log('[V2 Action] Updated Profile:', JSON.stringify(updatedState.profile, null, 2));
+
+        return {
+            response,
+            profile: updatedState.profile,
+            isComplete: false, // Always keep conversation open for follow-up questions
+            thoughtProcess: llmResponse.thought_process,
+            recommendation: updatedState.finalRecommendation,
+        };
+
+    } catch (error: any) {
+        console.error('[V2 Agent Error] Detailed Trace:', error);
+        return {
+            response: "I encountered an error. Let me try to help you differently. Could you tell me more about your business?",
+            error: true,
+        };
+    }
+}
+
+/**
+ * Reset V2 agent session
+ */
+export async function resetLegalAgentV2Session(sessionId: string) {
+    agentSessions.delete(sessionId);
+    return {
+        success: true,
+        newState: initializeLegalAgentState(sessionId),
+    };
+}
+
+/**
+ * Get V2 agent session state
+ */
+export async function getLegalAgentV2State(sessionId: string) {
+    const state = agentSessions.get(sessionId);
+    return state || null;
+}
+

@@ -144,6 +144,17 @@ export async function observe(
     switch (action.type) {
         case 'generate_question':
             const question = await generateSmartQuestion(state);
+
+            // **FIX: Check for recommendation signal**
+            if (question === '[READY_TO_RECOMMEND]') {
+                // Switch to recommendation mode
+                return {
+                    success: true,
+                    data: await makeRecommendation(state),
+                    impact: 'Sufficient information gathered - making recommendation',
+                };
+            }
+
             return {
                 success: true,
                 data: question,
@@ -251,7 +262,16 @@ export async function reflect(state: AgentState): Promise<Reflection> {
  */
 async function generateSmartQuestion(state: AgentState): Promise<string> {
     const { selectBestQuestion } = await import('./question-generator');
-    return selectBestQuestion(state);
+    const question = selectBestQuestion(state);
+
+    // **FIX: Detect termination signal**
+    // If question generator says we're ready to recommend, return a marker
+    if (question === '[READY_TO_RECOMMEND]') {
+        // This will be caught by the orchestrator as a completion signal
+        return '[READY_TO_RECOMMEND]';
+    }
+
+    return question;
 }
 
 /**
