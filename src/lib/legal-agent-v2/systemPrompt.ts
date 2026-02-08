@@ -216,7 +216,10 @@ For every response, you MUST evaluate the suitability of ALL 5 main entity types
     "LLP": { "score": 40, "reason": "Cannot raise VC money", "is_excluded": false },
     "One Person Company (OPC)": { "score": 0, "reason": "You have 2 founders", "is_excluded": true },
     "Partnership Firm": { "score": 20, "reason": "Unlimited liability risk", "is_excluded": false },
-    "Sole Proprietorship": { "score": 0, "reason": "Multiple owners not allowed", "is_excluded": true }
+    "Sole Proprietorship": { "score": 0, "reason": "Multiple owners not allowed", "is_excluded": true },
+    "Section 8 Company": { "score": 0, "reason": "Not a non-profit intent", "is_excluded": true },
+    "Trust": { "score": 0, "reason": "Not a non-profit intent", "is_excluded": true },
+    "Society": { "score": 0, "reason": "Not a non-profit intent", "is_excluded": true }
   },
   "next_action": "ask_question",
   ...

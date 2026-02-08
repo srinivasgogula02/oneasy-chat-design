@@ -65,6 +65,11 @@ export const SuitabilityAnalysisSchema = z.object({
     "One Person Company (OPC)": EntityScoreSchema,
     "Partnership Firm": EntityScoreSchema,
     "Sole Proprietorship": EntityScoreSchema,
+
+    // Non-profit entities
+    "Section 8 Company": EntityScoreSchema,
+    "Trust": EntityScoreSchema,
+    "Society": EntityScoreSchema,
 }).describe('Real-time evaluation of all entity types');
 
 export type SuitabilityAnalysis = z.infer<typeof SuitabilityAnalysisSchema>;

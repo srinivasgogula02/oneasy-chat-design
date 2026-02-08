@@ -59,9 +59,9 @@ export function ProChat() {
                         "Partnership Firm": analysis["Partnership Firm"]?.score || 0,
                         "Sole Proprietorship": analysis["Sole Proprietorship"]?.score || 0,
                         "Public Limited Company": 0,
-                        "Section 8 Company": 0,
-                        "Trust": 0,
-                        "Society": 0
+                        "Section 8 Company": analysis["Section 8 Company"]?.score || 0,
+                        "Trust": analysis["Trust"]?.score || 0,
+                        "Society": analysis["Society"]?.score || 0
                     };
                 } else {
                     // Fallback to calculator if for some reason analysis is missing (shouldn't happen)
