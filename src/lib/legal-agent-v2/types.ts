@@ -8,17 +8,17 @@ import { z } from 'zod';
 // ========== User Profile Schema ==========
 
 export const UserProfileSchema = z.object({
-    intent: z.enum(['business', 'charity', 'unknown']).default('unknown'),
-    funding_needs: z.enum(['vc', 'angel', 'bank_loan', 'bootstrap', 'grants', 'unknown']).default('unknown'),
-    founder_count: z.number().nullable().default(null),
-    liability_preference: z.enum(['limited', 'unlimited', 'unknown']).default('unknown'),
-    nri_status: z.boolean().nullable().default(null),
-    business_type: z.string().nullable().default(null), // e.g., "fintech", "professional_services", "ecommerce"
-    expansion_plans: z.enum(['franchise', 'multi_branch', 'single_location', 'online', 'unknown']).default('unknown'),
-    revenue_target: z.string().nullable().default(null), // e.g., "< 20L", "20L-1Cr", "> 5Cr"
-    foreign_involvement: z.boolean().nullable().default(null), // Foreign investors, directors, or clients
-    professional_services: z.boolean().nullable().default(null), // CA, Lawyer, Consultant
-    exit_plans: z.enum(['sell', 'family', 'personal', 'unknown']).default('unknown'),
+    intent: z.enum(['business', 'charity', 'unknown']),
+    funding_needs: z.enum(['vc', 'angel', 'bank_loan', 'bootstrap', 'grants', 'unknown']),
+    founder_count: z.number().nullable(),
+    liability_preference: z.enum(['limited', 'unlimited', 'unknown']),
+    nri_status: z.boolean().nullable(),
+    business_type: z.string().nullable(), // e.g., "fintech", "professional_services", "ecommerce"
+    expansion_plans: z.enum(['franchise', 'multi_branch', 'single_location', 'online', 'unknown']),
+    revenue_target: z.string().nullable(), // e.g., "< 20L", "20L-1Cr", "> 5Cr"
+    foreign_involvement: z.boolean().nullable(), // Foreign investors, directors, or clients
+    professional_services: z.boolean().nullable(), // CA, Lawyer, Consultant
+    exit_plans: z.enum(['sell', 'family', 'personal', 'unknown']),
 });
 
 export type UserProfile = z.infer<typeof UserProfileSchema>;
@@ -56,7 +56,7 @@ export type RecommendationOutput = z.infer<typeof RecommendationOutputSchema>;
 export const EntityScoreSchema = z.object({
     score: z.number().min(0).max(100).describe('Suitability score (0-100) based on current context'),
     reason: z.string().describe('Brief reason for this score (max 10 words, e.g., "Best for VC funding", "High liability risk")'),
-    is_excluded: z.boolean().default(false).describe('True if this entity is legally impossible or highly unsuitable'),
+    is_excluded: z.boolean().describe('True if this entity is legally impossible or highly unsuitable'),
 });
 
 export const SuitabilityAnalysisSchema = z.object({
@@ -81,10 +81,10 @@ export const LLMResponseSchema = z.object({
     thought_process: ThoughtProcessSchema,
     suitability_analysis: SuitabilityAnalysisSchema,
     next_action: z.enum(['ask_question', 'recommend']).describe('What to do next'),
-    question: z.string().optional().describe('Next question to ask user (if action is ask_question)'),
-    follow_up: z.string().optional().describe('Optional clarifying sub-question'),
-    recommendation: RecommendationOutputSchema.optional().describe('Final recommendation (if action is recommend)'),
-    new_memories: z.array(z.string()).optional().describe('List of critical facts to save to long-term memory'),
+    question: z.string().nullable().describe('Next question to ask user (if action is ask_question)'),
+    follow_up: z.string().nullable().describe('Optional clarifying sub-question'),
+    recommendation: RecommendationOutputSchema.nullable().describe('Final recommendation (if action is recommend)'),
+    new_memories: z.array(z.string()).nullable().describe('List of critical facts to save to long-term memory'),
     updated_profile: UserProfileSchema.describe('Updated user profile based on latest information'),
 });
 
