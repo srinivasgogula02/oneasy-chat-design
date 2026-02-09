@@ -202,6 +202,9 @@ function createFallbackResponse(profile: UserProfile, errorMessage: string): LLM
         },
         next_action: 'ask_question',
         question: fallbackQuestion,
+        follow_up: null,
+        recommendation: null,
+        new_memories: null,
         updated_profile: profile,
     };
 }
@@ -397,7 +400,7 @@ export function updateAgentState(
     // Update completion status
     if (llmResponse.next_action === 'recommend') {
         newState.isComplete = true;
-        newState.finalRecommendation = llmResponse.recommendation;
+        newState.finalRecommendation = llmResponse.recommendation || undefined;
     }
 
     return newState;
