@@ -2,7 +2,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { headers } from 'next/headers'
+import { SubmitButton } from '@/components/submit-button'
 
 export default async function Login({
     searchParams,
@@ -27,7 +27,7 @@ export default async function Login({
             return redirect(`/login?message=${encodeURIComponent(error.message)}`)
         }
 
-        return redirect('/')
+        return redirect('/chat')
     }
 
     return (
@@ -76,9 +76,9 @@ export default async function Login({
                     placeholder="••••••••"
                     required
                 />
-                <button className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2">
+                <SubmitButton className="mb-2" pendingText="Signing In...">
                     Sign In
-                </button>
+                </SubmitButton>
                 <div className="text-center text-sm">
                     Don't have an account? <Link href="/signup" className="underline">Sign Up</Link>
                 </div>

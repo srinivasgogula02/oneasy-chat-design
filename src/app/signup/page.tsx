@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { SubmitButton } from '@/components/submit-button'
 
 export default async function Signup({
     searchParams,
@@ -35,13 +36,13 @@ export default async function Signup({
                 if (signInError) {
                     return redirect(`/login?message=${encodeURIComponent("User already exists. Please sign in with the correct password.")}`)
                 }
-                return redirect('/')
+                return redirect('/chat')
             }
             return redirect(`/signup?message=${encodeURIComponent(error.message)}`)
         }
 
         if (data.session) {
-            return redirect('/')
+            return redirect('/chat')
         }
 
         return redirect('/signup?message=Check email to continue sign in process')
@@ -93,9 +94,9 @@ export default async function Signup({
                     placeholder="••••••••"
                     required
                 />
-                <button className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2">
+                <SubmitButton className="mb-2" pendingText="Signing Up...">
                     Sign Up
-                </button>
+                </SubmitButton>
                 <div className="text-center text-sm">
                     Already have an account? <Link href="/login" className="underline">Sign In</Link>
                 </div>

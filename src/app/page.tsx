@@ -30,8 +30,8 @@ export default function MarketingPage() {
             <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">Testimonials</a>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden sm:block">Log in</Link>
-            <Link href="/" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40">
+            <Link href="/chat" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden sm:block">Log in</Link>
+            <Link href="/chat" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40">
               Get Started
             </Link>
           </div>
@@ -74,7 +74,7 @@ export default function MarketingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                <Link href="/" className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 flex items-center justify-center gap-2 group">
+                <Link href="/chat" className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 flex items-center justify-center gap-2 group">
                   Find My Entity
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -285,7 +285,7 @@ export default function MarketingPage() {
                 ))}
               </ul>
 
-              <Link href="/" className="text-primary font-semibold hover:underline inline-flex items-center gap-2">
+              <Link href="/chat" className="text-primary font-semibold hover:underline inline-flex items-center gap-2">
                 Try the interactive demo <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -336,7 +336,7 @@ export default function MarketingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/" className="h-14 px-8 rounded-full bg-white text-primary font-bold text-lg hover:bg-white/90 transition-all flex items-center gap-2 shadow-2xl shadow-black/20">
+            <Link href="/chat" className="h-14 px-8 rounded-full bg-white text-primary font-bold text-lg hover:bg-white/90 transition-all flex items-center gap-2 shadow-2xl shadow-black/20">
               Get Started Now <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
