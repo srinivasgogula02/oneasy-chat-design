@@ -1,15 +1,9 @@
-
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { SubmitButton } from '@/components/submit-button'
+import LoginClient from './login-client'
 
-export default async function Login({
-    searchParams,
-}: {
-    searchParams: Promise<{ message: string }>
-}) {
-    const { message } = await searchParams
+export default async function Login() {
 
     const signIn = async (formData: FormData) => {
         'use server'
@@ -53,42 +47,7 @@ export default async function Login({
                 Back
             </Link>
 
-            <form
-                className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground"
-                action={signIn}
-            >
-                <label className="text-md" htmlFor="email">
-                    Email
-                </label>
-                <input
-                    className="rounded-md px-4 py-2 bg-inherit border mb-6"
-                    name="email"
-                    placeholder="you@example.com"
-                    required
-                />
-                <label className="text-md" htmlFor="password">
-                    Password
-                </label>
-                <input
-                    className="rounded-md px-4 py-2 bg-inherit border mb-6"
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                />
-                <SubmitButton className="mb-2" pendingText="Signing In...">
-                    Sign In
-                </SubmitButton>
-                <div className="text-center text-sm">
-                    Don't have an account? <Link href="/signup" className="underline">Sign Up</Link>
-                </div>
-
-                {message && (
-                    <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">
-                        {message}
-                    </p>
-                )}
-            </form>
+            <LoginClient signInAction={signIn} />
         </div>
     )
 }
