@@ -47,3 +47,6 @@ next-env.d.ts
 logic_test_results.jsonl
 sample_results.jsonl
 logic_test.log
+
+# otp reference implementation
+/otp_msg91/
