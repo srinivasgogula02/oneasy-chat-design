@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import LoginClient from './login-client'
 
 export default async function Login() {
@@ -47,7 +48,11 @@ export default async function Login() {
                 Back
             </Link>
 
-            <LoginClient signInAction={signIn} />
+            <div className="w-full">
+                <Suspense fallback={<div className="text-center p-4">Loading login...</div>}>
+                    <LoginClient signInAction={signIn} />
+                </Suspense>
+            </div>
         </div>
     )
 }
