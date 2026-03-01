@@ -23,7 +23,7 @@
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.563.0",
     "nanoid": "^5.1.6",
-    "next": "^15.5.12",
+    "next": "16.1.6",
     "p-retry": "^7.1.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
@@ -32,6 +32,7 @@
     "react-syntax-highlighter": "^16.1.0",
     "remark-gfm": "^4.0.1",
     "superjson": "^2.2.6",
+    "supermemory": "^4.15.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.3.6"
