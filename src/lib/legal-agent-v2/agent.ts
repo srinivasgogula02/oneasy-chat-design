@@ -122,9 +122,9 @@ async function callLLMWithRetry(
                         llmResponse.new_memories.map(async (memory) => {
                             try {
                                 console.log('[Agent] Saving memory:', memory);
-                                await supermemory.memories.add({
+                                await supermemory.add({
+                                    containerTag: userId,
                                     content: memory,
-                                    containerTags: [userId],
                                 });
                             } catch (memError) {
                                 console.error('[Agent] Failed to save memory:', memError);
