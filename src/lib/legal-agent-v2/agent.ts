@@ -350,6 +350,22 @@ export function formatRecommendation(
         });
     }
 
+    const entityLinks: Record<string, string> = {
+        "Private Limited Company": "https://www.oneasy.ai/services/private-limited-company",
+        "One Person Company (OPC)": "https://www.oneasy.ai/services/one-person-company",
+        "LLP": "https://www.oneasy.ai/services/limited-liability-partnership",
+        "Sole Proprietorship": "https://www.oneasy.ai/services/proprietorship",
+        "Section 8 Company": "https://www.oneasy.ai/services/section-8-company",
+        "Trust": "https://www.oneasy.ai/services/section-8-company",
+        "Society": "https://www.oneasy.ai/services/section-8-company"
+    };
+
+    const registrationLink = entityLinks[recommendation.entity];
+    if (registrationLink) {
+        message += `\n### 🚀 Next Steps\n\n`;
+        message += `[Get your legal entity registered](${registrationLink})\n`;
+    }
+
     return message;
 }
 

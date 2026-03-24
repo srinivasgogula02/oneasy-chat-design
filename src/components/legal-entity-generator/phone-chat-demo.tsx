@@ -14,7 +14,7 @@ const chatSequence = [
     { role: "user", text: "No, both Indian. But maybe a US investor later." },
     { role: "agent", text: "✦ Recommendation: **Private Limited Company** — This is the right structure for you. It's the only entity type that allows equity-based funding from angel investors and VCs. With 2 Indian founders, you can incorporate easily. Estimated setup cost: ₹8,000–₹12,000. Annual compliance: ₹25,000–₹40,000/year. Want me to connect you with OnEasy's CA team to register right now?" },
     { role: "user", text: "Yes! And this was completely free?" },
-    { role: "agent", text: "100% free. Always. 😊 The recommendation is on us. If you'd like us to handle the actual registration, that starts at ₹7,999 — all-inclusive." },
+    { role: "agent", text: "100% free. Always. 😊 The recommendation is on us. If you'd like us to handle the actual registration, that starts at ₹7,999 — all-inclusive. \\n\\n[Get your legal entity registered](https://www.oneasy.ai/services/private-limited-company)" },
 ];
 
 export function PhoneChatDemo() {
@@ -65,10 +65,20 @@ export function PhoneChatDemo() {
                                     : "bg-[#111111] border border-white/10 text-white/90 self-start rounded-tl-sm shadow-[0_4px_20px_rgba(232,25,44,0.05)]"
                             )}
                         >
-                            {/* Simple Markdown highlighting for bold text */}
-                            {msg.text.split("**").map((part, i) =>
-                                i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{part}</strong> : <span key={i}>{part}</span>
-                            )}
+                            {/* Simple Markdown highlighting for bold text and links */}
+                            {msg.text.split(/(\\[.*?\\]\\(.*?\\))/).map((part, i) => {
+                                const linkMatch = part.match(/\\[(.*?)\\]\\((.*?)\\)/);
+                                if (linkMatch) {
+                                    return (
+                                        <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                                            {linkMatch[1]}
+                                        </a>
+                                    );
+                                }
+                                return part.split("**").map((subPart, j) =>
+                                    j % 2 === 1 ? <strong key={`${i}-${j}`} className="text-white font-semibold">{subPart}</strong> : <span key={`${i}-${j}`}>{subPart}</span>
+                                );
+                            })}
                         </motion.div>
                     ))}
 

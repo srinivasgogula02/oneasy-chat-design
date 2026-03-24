@@ -21,6 +21,17 @@ const SHORT_NAMES: Record<string, string> = {
     "OPC": "OPC",
 };
 
+const ENTITY_LINKS: Record<string, string> = {
+    "Private Limited Company": "https://www.oneasy.ai/services/private-limited-company",
+    "One Person Company (OPC)": "https://www.oneasy.ai/services/one-person-company",
+    "OPC": "https://www.oneasy.ai/services/one-person-company",
+    "LLP": "https://www.oneasy.ai/services/limited-liability-partnership",
+    "Sole Proprietorship": "https://www.oneasy.ai/services/proprietorship",
+    "Section 8 Company": "https://www.oneasy.ai/services/section-8-company",
+    "Trust": "https://www.oneasy.ai/services/section-8-company",
+    "Society": "https://www.oneasy.ai/services/section-8-company"
+};
+
 export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
     if (!agentState) {
         return (
@@ -180,6 +191,51 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
                 </div>
             </div>
 
+            {/* Final Recommendation Teaser */}
+            {agentState.recommendedEntity && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-6 p-4 bg-gradient-to-br from-[#01334c]/5 to-cyan-500/10 rounded-xl border border-[#01334c]/20"
+                >
+                    <div className="flex items-center gap-3">
+                        <Building2 className="w-6 h-6 text-[#01334c]" />
+                        <div>
+                            <p className="text-xs text-slate-500">Recommended Entity</p>
+                            <p className="text-lg font-semibold text-[#01334c]">{agentState.recommendedEntity}</p>
+                        </div>
+                    </div>
+                    {agentState.confidenceScore && (
+                        <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-gradient-to-r from-[#01334c] to-cyan-500"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${agentState.confidenceScore}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                />
+                            </div>
+                            <span className="text-sm font-mono text-[#01334c]">{agentState.confidenceScore}%</span>
+                        </div>
+                    )}
+                    
+                    {/* Highlighted Registration Action */}
+                    {ENTITY_LINKS[agentState.recommendedEntity] && (
+                        <div className="mt-4 pt-4 border-t border-[#01334c]/10">
+                            <a 
+                                href={ENTITY_LINKS[agentState.recommendedEntity]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center w-full gap-2 px-4 py-2.5 bg-gradient-to-r from-[#01334c] to-cyan-700 hover:from-[#024a6e] hover:to-cyan-600 text-white text-sm font-medium rounded-lg shadow-[0_4px_14px_0_rgba(1,51,76,0.39)] hover:shadow-[0_6px_20px_rgba(1,51,76,0.23)] hover:bg-[rgba(1,51,76,0.9)] transition-all"
+                            >
+                                Get your legal entity registered
+                                <Sparkles className="w-4 h-4" />
+                            </a>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
             {/* Answers Summary */}
             {answeredQuestions.length > 0 && (
                 <div className="flex-1">
@@ -207,36 +263,6 @@ export function EvaluationPanel({ agentState }: EvaluationPanelProps) {
                         </AnimatePresence>
                     </div>
                 </div>
-            )}
-
-            {/* Final Recommendation Teaser */}
-            {agentState.recommendedEntity && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mt-6 p-4 bg-gradient-to-br from-[#01334c]/5 to-cyan-500/10 rounded-xl border border-[#01334c]/20"
-                >
-                    <div className="flex items-center gap-3">
-                        <Building2 className="w-6 h-6 text-[#01334c]" />
-                        <div>
-                            <p className="text-xs text-slate-500">Recommended Entity</p>
-                            <p className="text-lg font-semibold text-[#01334c]">{agentState.recommendedEntity}</p>
-                        </div>
-                    </div>
-                    {agentState.confidenceScore && (
-                        <div className="mt-3 flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full bg-gradient-to-r from-[#01334c] to-cyan-500"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${agentState.confidenceScore}%` }}
-                                    transition={{ duration: 1, ease: "easeOut" }}
-                                />
-                            </div>
-                            <span className="text-sm font-mono text-[#01334c]">{agentState.confidenceScore}%</span>
-                        </div>
-                    )}
-                </motion.div>
             )}
         </div>
     );
